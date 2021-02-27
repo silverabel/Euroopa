@@ -39,25 +39,42 @@ class GameScene extends Phaser.Scene {
   create() {
     this.europe = this.add.image(400, 300, 'europe');
 
-    this.countries = this.add.group();
+    this.countries = this.physics.add.group();
     countriesArray.forEach(country => {
-      let countryObject = this.add.image(country.x, country.y, country.name);
+      let countryObject = this.physics.add.image(country.x, country.y, country.name);
       this.countries.add(countryObject);
+
+      if (country.name === 'estonia') this.currentCountry = countryObject;
     });
 
-    this.countries.children.iterate(country => country.setInteractive());
+    this.currentCountry.setTint(0x999999);
+    this.setOnlyNeighboursInteractive();
 
     this.input.on('gameobjectover', (pointer, object) => {
-      object.setTint(0xbbbbbb);
+      if (object !== this.currentCountry) object.setTint(0xbbbbbb);
     });
 
     this.input.on('gameobjectout', (pointer, object) => {
-      object.clearTint();
+      if (object !== this.currentCountry) object.clearTint();
     });
 
     this.input.on('gameobjectdown', (pointer, object) => {
       object.setTint(0x999999);
-      setTimeout(() => object.setTint(0xbbbbbb), 100);
+      this.currentCountry.clearTint();
+      this.currentCountry = object;
+
+      this.setOnlyNeighboursInteractive();
+    });
+  }
+
+  update() {
+
+  }
+
+  setOnlyNeighboursInteractive() {
+    this.countries.children.iterate(country => {
+      country.disableInteractive();
+      if (this.physics.overlap(country, this.currentCountry)) country.setInteractive();
     });
   }
 }
