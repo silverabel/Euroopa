@@ -1,7 +1,9 @@
 <?php
 require 'config.php';
 
-if ($_SERVER["HTTP_REFERER"] !== $allowedAddress || $_GET["countries"] !== "true") sendResponse();
+session_start();
+
+if ($_SERVER["HTTP_REFERER"] !== $allowedAddress || $_GET["countries"] !== "true") sendResponse(["response" => $_SERVER["HTTP_REFERER"]]);
 
 global $conn;
 $conn = new mysqli($hostname, $username, $password, $DBname);

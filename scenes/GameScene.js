@@ -6,19 +6,21 @@ class GameScene extends Phaser.Scene {
   preload() {
     this.load.image('europe', 'images/europe.png');
 
-    this.loadCountries();
+    for (const country of countriesArray) {
+      this.load.image(country.name, `images/countries/${country.name}.png`);
+    };
   }
  
   create() {
     this.europe = this.add.image(400, 300, 'europe');
 
     this.countries = this.physics.add.group();
-    countriesArray.forEach(country => {
+    for (const country of countriesArray) {
       let countryObject = this.physics.add.image(Number(country.x), Number(country.y), country.name);
       this.countries.add(countryObject);
 
       if (country.name === 'estonia') this.currentCountry = countryObject;
-    });
+    };
 
     this.currentCountry.setTint(0x999999);
     this.setOnlyNeighboursInteractive();
@@ -48,15 +50,6 @@ class GameScene extends Phaser.Scene {
     this.countries.children.iterate(country => {
       country.disableInteractive();
       if (this.physics.overlap(country, this.currentCountry)) country.setInteractive();
-    });
-  }
-
-  async loadCountries() {
-    let countries = await fetch('api/api.php?countries=true');
-    let response = await countries.json();
-    countriesArray = response.response;
-    countriesArray.forEach(country => {
-      this.load.image(country.name, `images/countries/${country.name}.png`);
     });
   }
 }
