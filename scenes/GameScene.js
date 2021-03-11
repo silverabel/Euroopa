@@ -12,15 +12,15 @@ class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('europe', 'images/europe.png');
+    this.load.svg('europe', 'images/europe.svg');
 
     for (const country of countriesArray) {
-      this.load.image(country.name, `images/countries/${country.name}.png`);
+      this.load.svg(country.name, `images/countries/${country.name}.svg`);
     };
   }
  
   create() {
-    this.europe = this.add.image(1920, 0, 'europe').setOrigin(1, 0);
+    this.europe = this.add.image(960, 540, 'europe');
 
     this.countries = this.physics.add.group();
     for (const country of countriesArray) {
