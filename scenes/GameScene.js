@@ -28,11 +28,12 @@ class GameScene extends Phaser.Scene {
       this.countries.add(countryObject);
       countryObject.setTintFill(this.colorConfig.country);
 
+      countryObject.setInteractive();
+
       if (country.name === 'estonia') this.currentCountry = countryObject;
     };
 
     this.setColor(this.currentCountry, 'currentCountry');
-    this.setOnlyNeighboursInteractive();
 
     this.input.on('gameobjectover', (pointer, object) => {
       if (object !== this.currentCountry) this.setColor(object, 'neighbourCountryHover');
@@ -47,7 +48,6 @@ class GameScene extends Phaser.Scene {
       this.setColor(this.currentCountry, 'country');
       this.currentCountry = object;
 
-      this.setOnlyNeighboursInteractive();
     });
   }
 
@@ -60,6 +60,7 @@ class GameScene extends Phaser.Scene {
       country.disableInteractive();
       if (this.physics.overlap(country, this.currentCountry)) country.setInteractive();
     });
+    this.currentCountry.setInteractive();
   }
 
   setColor(object, color) {
