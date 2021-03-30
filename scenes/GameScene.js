@@ -31,8 +31,6 @@ class GameScene extends Phaser.Scene {
     for (const country of countriesArray) {
       const countryObject = this.physics.add.image(Number(country.x), Number(country.y), country.name);
       this.countries.add(countryObject);
-      Math.random() > 0.8 ? this.setFill(countryObject, 'countryLockdown')
-                          : this.setFill(countryObject, 'country');
 
       // Set country event listeners
       countryObject.on('pointerover', () => {
@@ -56,12 +54,17 @@ class GameScene extends Phaser.Scene {
       });
       // Country event listeners end
 
-      countryObject.setInteractive();
-
-      if (country.name === 'estonia') this.currentCountry = countryObject;
+      if (country.name === 'estonia') {
+        this.currentCountry = countryObject;
+        this.setFill(countryObject, 'currentCountry');
+      }
+      else {
+        countryObject.setInteractive();
+        Math.random() > 0.8 ? this.setFill(countryObject, 'countryLockdown')
+                            : this.setFill(countryObject, 'country');
+      }
     };
-    this.setFill(this.currentCountry, 'currentCountry');
-
+    
     this.modal = this.add.image(960, 540, 'modal');
     this.modal.visible = false;
     this.modalTitle = this.add.text(960, 350, 'Küsimus', { fill: '#000000', font: '64px' }).setOrigin(0.5);
