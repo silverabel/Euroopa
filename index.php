@@ -35,7 +35,7 @@ let countriesArray = <?php echo json_encode($countriesArray)?>;
 let game = new Phaser.Game({
   width: 1920,
   height: 1080,
-  backgroundColor: 0x0000FF,
+  backgroundColor: 0x0072CE,
   scene: [GameScene],
   physics: {
     default: 'arcade',

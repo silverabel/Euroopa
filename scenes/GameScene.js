@@ -5,11 +5,12 @@ class GameScene extends Phaser.Scene {
 
   init() {
     this.colorConfig = {
-      currentCountry: 0xffffff,
-      countryHover: 0xbbbbbb,
-      country: 0x888888,
+      currentCountry: 0x0D4D82,
+      countryHover: 0x7D8207,
+      country: 0xC7CF15,
       modalButton: 0x000000,
       modalButtonHover: 0x333333,
+      countryLockdown: 0xCF1B15,
     }
   }
 
@@ -30,7 +31,8 @@ class GameScene extends Phaser.Scene {
     for (const country of countriesArray) {
       const countryObject = this.physics.add.image(Number(country.x), Number(country.y), country.name);
       this.countries.add(countryObject);
-      this.setFill(countryObject, 'country');
+      Math.random() > 0.8 ? this.setFill(countryObject, 'countryLockdown')
+                          : this.setFill(countryObject, 'country');
 
       // Set country event listeners
       countryObject.on('pointerover', () => {
