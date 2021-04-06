@@ -5,9 +5,9 @@ class GameScene extends Phaser.Scene {
 
   init() {
     this.colorConfig = {
-      currentCountry: 0x0D4D82,
+      currentCountry: 0xC7CF15,
       countryHover: 0x7D8207,
-      country: 0xC7CF15,
+      country: 0x0D4D82,
       modalButton: 0x000000,
       modalButtonHover: 0x333333,
       countryLockdown: 0xCF1B15,
