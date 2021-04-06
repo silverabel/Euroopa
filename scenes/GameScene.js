@@ -22,6 +22,8 @@ class GameScene extends Phaser.Scene {
     };
 
     this.load.svg('modal', 'images/modal.svg');
+
+    this.load.svg('wheelGood', 'images/wheelGood.svg');
   }
  
   create() {
@@ -65,6 +67,7 @@ class GameScene extends Phaser.Scene {
       }
     };
     
+    // Modal start
     this.modal = this.add.image(960, 540, 'modal');
     this.modal.visible = false;
     this.modalTitle = this.add.text(960, 350, 'Küsimus', { fill: '#000000', font: '64px' }).setOrigin(0.5);
@@ -82,7 +85,7 @@ class GameScene extends Phaser.Scene {
     this.setFill(this.modalButton3, 'modalButton');
     this.modalButton3.visible = false;
 
-    // Set modal button event listeners
+    // Set modal buttons event listeners
     this.modalButtons = this.add.group([this.modalButton1, this.modalButton2, this.modalButton3]);
     this.modalButtons.children.iterate(button => {
       button.on('pointerover', () => {
@@ -101,15 +104,71 @@ class GameScene extends Phaser.Scene {
         this.modalButton2.visible = false;
         this.modalButton3.visible = false;
 
-        this.countries.children.iterate(country => {
-          if (country !== this.currentCountry) country.setInteractive();
-        });
+        this.wheel.visible = true;
+        this.wheelButton.visible = true;
+        this.wheelButton.setInteractive();
+
+
+        // this.countries.children.iterate(country => {
+        //   if (country !== this.currentCountry) country.setInteractive();
+        // });
       });
     });
-    // Modal button event listeners end
+    // Modal buttons event listeners end
+    // Modal end
+
+    // Wheel start
+    this.wheelSpinning = false;
+    this.wheelSpeed = 0;
+
+    this.wheel = this.add.image(960, 540, 'wheelGood');
+    this.wheel.visible = false;
+
+    this.wheelButton = this.add.text(960, 700, 'SPIN', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
+    this.setFill(this.wheelButton, 'modalButton');
+    this.wheelButton.visible = false;
+    this.wheelButton.on('pointerover', () => {
+
+    });
+    this.wheelButton.on('pointerout', () => {
+
+    });
+    this.wheelButton.on('pointerdown', () => {
+      this.wheelButton.visible = false;
+      this.wheelButton.disableInteractive();
+
+      this.wheelSpinning = true;
+      this.wheelSpeed = Phaser.Math.Between(10, 40);
+    });
+
+    
+
+
+
+
+
+    // Wheel end
   }
 
   update() {
+    if (this.wheelSpinning) {
+      if (this.wheelSpeed > 0) {
+        this.wheel.angle += this.wheelSpeed;
+        this.wheelSpeed -= 0.1;
+      }
+      else {
+        this.wheelSpinning = false;
+
+        this.wheel.visible = false;
+        this.wheel.angle = 0;
+
+        this.countries.children.iterate(country => {
+          if (country !== this.currentCountry) country.setInteractive();
+        });
+      }
+
+      
+    }
 
   }
 
