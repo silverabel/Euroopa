@@ -105,13 +105,9 @@ class GameScene extends Phaser.Scene {
         this.modalButton3.visible = false;
 
         this.wheel.visible = true;
+        this.wheelTriangle.visible = true;
         this.wheelButton.visible = true;
         this.wheelButton.setInteractive();
-
-
-        // this.countries.children.iterate(country => {
-        //   if (country !== this.currentCountry) country.setInteractive();
-        // });
       });
     });
     // Modal buttons event listeners end
@@ -123,6 +119,9 @@ class GameScene extends Phaser.Scene {
 
     this.wheel = this.add.image(960, 540, 'wheelGood');
     this.wheel.visible = false;
+
+    this.wheelTriangle = this.add.triangle(960, 80, 0, 0, 100, 0, 50, 100, 0x000000);
+    this.wheelTriangle.visible = false;
 
     this.wheelButton = this.add.text(960, 700, 'SPIN', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
     this.setFill(this.wheelButton, 'modalButton');
@@ -159,8 +158,35 @@ class GameScene extends Phaser.Scene {
       else {
         this.wheelSpinning = false;
 
-        this.wheel.visible = false;
+
+        let winner = Math.floor(this.wheel.angle / 60);
+        console.log(winner)
+        let message = '';
+        switch (winner) {
+          case 0:
+            message = '3x boonus';
+            break;
+          case 1:
+            message = 'vaktsiin';
+            break;
+          case 2:
+            message = 'vaba pääse';
+            break;
+          case -3:
+            message = 'boonuse valik';
+            break;
+          case -2:
+            message = 'lennupilet';
+            break;
+          case -1:
+            message = 'ravim';
+        }
+
+        alert('Võitsid: ' + message);
+
         this.wheel.angle = 0;
+        this.wheel.visible = false;
+        this.wheelTriangle.visible = false;
 
         this.countries.children.iterate(country => {
           if (country !== this.currentCountry) country.setInteractive();
