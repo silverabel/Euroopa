@@ -217,6 +217,7 @@ class GameScene extends Phaser.Scene {
   }
 
   async fetchQuestion() {
+    this.modalQuestion.setText('Küsimuse laadimine...');
     let response = await fetch(`api/api.php?country=${this.currentCountry.texture.key}`);
     let question = await response.json();
 
