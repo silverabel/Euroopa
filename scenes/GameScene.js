@@ -24,6 +24,7 @@ class GameScene extends Phaser.Scene {
     this.load.svg('modal', 'images/modal.svg');
 
     this.load.svg('wheelGood', 'images/wheelGood.svg');
+    this.load.svg('wheelBad', 'images/wheelBad.svg');
   }
  
   create() {
@@ -52,6 +53,7 @@ class GameScene extends Phaser.Scene {
           country.disableInteractive();
         });
 
+        this.fetchQuestion();
         this.openModal();
       });
       // Country event listeners end
@@ -69,24 +71,20 @@ class GameScene extends Phaser.Scene {
     
     // Modal start
     this.modal = this.add.image(960, 540, 'modal');
-    this.modal.visible = false;
     this.modalTitle = this.add.text(960, 350, 'Küsimus', { fill: '#000000', font: '64px' }).setOrigin(0.5);
-    this.modalTitle.visible = false;
     this.modalQuestion = this.add.text(960, 540, '', { fill: '#000000', font: '32px' }).setOrigin(0.5);
-    this.modalQuestion.visible = false;
 
-    this.modalButton1 = this.add.text(640, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
-    this.setFill(this.modalButton1, 'modalButton');
-    this.modalButton1.visible = false;
-    this.modalButton2 = this.add.text(960, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
-    this.setFill(this.modalButton2, 'modalButton');
-    this.modalButton2.visible = false;
-    this.modalButton3 = this.add.text(1280, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
-    this.setFill(this.modalButton3, 'modalButton');
-    this.modalButton3.visible = false;
+    this.modalButtonA = this.add.text(640, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
+    this.setFill(this.modalButtonA, 'modalButton');
+    this.modalButtonB = this.add.text(960, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
+    this.setFill(this.modalButtonB, 'modalButton');
+    this.modalButtonC = this.add.text(1280, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
+    this.setFill(this.modalButtonC, 'modalButton');
+
+    this.setModalVisibility(false);
 
     // Set modal buttons event listeners
-    this.modalButtons = this.add.group([this.modalButton1, this.modalButton2, this.modalButton3]);
+    this.modalButtons = this.add.group([this.modalButtonA, this.modalButtonB, this.modalButtonC]);
     this.modalButtons.children.iterate(button => {
       button.on('pointerover', () => {
         this.setFill(button, 'modalButtonHover');
@@ -97,14 +95,19 @@ class GameScene extends Phaser.Scene {
       });
   
       button.on('pointerdown', () => {
-        this.modal.visible = false;
-        this.modalTitle.visible = false;
-        this.modalQuestion.visible = false;
-        this.modalButton1.visible = false;
-        this.modalButton2.visible = false;
-        this.modalButton3.visible = false;
+        if (button.text == this.questionCorrectAnswer) {
+          alert('Õige vastus');
+          this.activeWheel = this.wheelGood;
+        }
+        else {
+          alert('Vale vastus');
+          this.activeWheel = this.wheelBad;
+        }
 
-        this.wheel.visible = true;
+        this.setModalVisibility(false);
+        this.clearQuestion();
+
+        this.activeWheel.visible = true;
         this.wheelTriangle.visible = true;
         this.wheelButton.visible = true;
         this.wheelButton.setInteractive();
@@ -117,8 +120,11 @@ class GameScene extends Phaser.Scene {
     this.wheelSpinning = false;
     this.wheelSpeed = 0;
 
-    this.wheel = this.add.image(960, 540, 'wheelGood');
-    this.wheel.visible = false;
+    this.wheelGood = this.add.image(960, 540, 'wheelGood');
+    this.wheelGood.visible = false;
+
+    this.wheelBad = this.add.image(960, 540, 'wheelBad');
+    this.wheelBad.visible = false;
 
     this.wheelTriangle = this.add.triangle(960, 80, 0, 0, 100, 0, 50, 100, 0x000000);
     this.wheelTriangle.visible = false;
@@ -126,12 +132,15 @@ class GameScene extends Phaser.Scene {
     this.wheelButton = this.add.text(960, 700, 'SPIN', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
     this.setFill(this.wheelButton, 'modalButton');
     this.wheelButton.visible = false;
+
     this.wheelButton.on('pointerover', () => {
 
     });
+
     this.wheelButton.on('pointerout', () => {
 
     });
+
     this.wheelButton.on('pointerdown', () => {
       this.wheelButton.visible = false;
       this.wheelButton.disableInteractive();
@@ -140,62 +149,52 @@ class GameScene extends Phaser.Scene {
       this.wheelSpeed = Phaser.Math.Between(10, 40);
     });
 
-    
-
-
-
-
-
     // Wheel end
   }
 
   update() {
     if (this.wheelSpinning) {
       if (this.wheelSpeed > 0) {
-        this.wheel.angle += this.wheelSpeed;
+        this.activeWheel.angle += this.wheelSpeed;
         this.wheelSpeed -= 0.1;
       }
       else {
         this.wheelSpinning = false;
 
 
-        let winner = Math.floor(this.wheel.angle / 60);
-        console.log(winner)
+        let winner = Math.floor(this.activeWheel.angle / 60);
         let message = '';
         switch (winner) {
           case 0:
-            message = '3x boonus';
+            message = this.activeWheel == this.wheelGood ? '3x boonus' : 'haigestusid viirusse';
             break;
           case 1:
-            message = 'vaktsiin';
+            message = this.activeWheel == this.wheelGood ? 'vaktsiin' : 'vaktsiin purunes';
             break;
           case 2:
-            message = 'vaba pääse';
+            message = this.activeWheel == this.wheelGood ? 'vaba pääse' : 'vaba pääse';
             break;
           case -3:
-            message = 'boonuse valik';
+            message = this.activeWheel == this.wheelGood ? 'boonuse valik' : 'riik läheb lukku';
             break;
           case -2:
-            message = 'lennupilet';
+            message = this.activeWheel == this.wheelGood ? 'lennupilet' : 'kaotasid lennupileti';
             break;
           case -1:
-            message = 'ravim';
+            message = this.activeWheel == this.wheelGood ? 'ravim' : 'kaotasid ravimi';
         }
 
-        alert('Võitsid: ' + message);
+        alert('Tulemus: ' + message);
 
-        this.wheel.angle = 0;
-        this.wheel.visible = false;
+        this.activeWheel.angle = 0;
+        this.activeWheel.visible = false;
         this.wheelTriangle.visible = false;
 
         this.countries.children.iterate(country => {
           if (country !== this.currentCountry) country.setInteractive();
         });
-      }
-
-      
+      } 
     }
-
   }
 
   setOnlyNeighboursInteractive() {
@@ -206,20 +205,50 @@ class GameScene extends Phaser.Scene {
     this.currentCountry.setInteractive();
   }
 
-  setFill(object, color) {
-    object.setTintFill(this.colorConfig[color]);
+  setFill(object, colorCode) {
+    object.setTintFill(this.colorConfig[colorCode]);
   }
 
   openModal() {
-    this.modal.visible = true;
-    this.modalTitle.visible = true;
-    this.modalQuestion.visible = true;
-    this.modalQuestion.setText('Kes täidab Andorras riigipea funktsiooni?');
-    this.modalButton1.visible = true;
-    this.modalButton1.setText('Kaks välismaa ametikandjat').setInteractive();
-    this.modalButton2.visible = true;
-    this.modalButton2.setText('President').setInteractive();
-    this.modalButton3.visible = true;
-    this.modalButton3.setText('Kuningas').setInteractive();
+    this.setModalVisibility(true);
+    this.modalButtonA.setInteractive();
+    this.modalButtonB.setInteractive();
+    this.modalButtonC.setInteractive();
+  }
+
+  async fetchQuestion() {
+    let response = await fetch(`api/api.php?country=${this.currentCountry.texture.key}`);
+    let question = await response.json();
+
+    if (question.name) {
+      this.modalQuestion.setText(question.name);
+      this.modalButtonA.setText(question.a);
+      this.modalButtonB.setText(question.b);
+      this.modalButtonC.setText(question.c);
+      this.questionCorrectAnswer = question[question.correct.toLowerCase()];
+      return;
+    }
+
+    this.modalQuestion.setText('Random question');
+    this.modalButtonA.setText('Õige');
+    this.modalButtonB.setText('Vale');
+    this.modalButtonC.setText('Vale');
+    this.questionCorrectAnswer = 'Õige';
+  }
+
+  clearQuestion() {
+    this.modalQuestion.setText('');
+    this.modalButtonA.setText('');
+    this.modalButtonB.setText('');
+    this.modalButtonC.setText('');
+  }
+
+  setModalVisibility(visibility) {
+    this.modal.visible = visibility;
+    this.modalTitle.visible = visibility;
+    this.modalQuestion.visible = visibility;
+    this.modalButtonA.visible = visibility;
+    this.modalButtonB.visible = visibility;
+    this.modalButtonC.visible = visibility;
   }
 }

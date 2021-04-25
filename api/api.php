@@ -1,32 +1,49 @@
 <?php
-require 'config.php';
+require '../DBconfig.php';
+
+error_reporting(-1);
 
 session_start();
-
-if ($_SERVER["HTTP_REFERER"] !== $allowedAddress || $_GET["countries"] !== "true") sendResponse(["response" => $_SERVER["HTTP_REFERER"]]);
 
 global $conn;
 $conn = new mysqli($hostname, $username, $password, $DBname);
 if ($conn->connect_error) sendResponse(["response" => "andmebaasiühendus ebaõnnestus"]);
 
-$result = $conn->query("SELECT * FROM country");
-if ($result->num_rows === 0) sendResponse(false);
+mysqli_set_charset($conn, "utf8");
 
-$response = [];
-while ($row = $result->fetch_assoc()) {
-  $response[] = ["name" => $row["name"],
-                 "x"    => $row["x"],
-                 "y"    => $row["y"]];
-}
+$stmt = $conn->prepare(
+  " SELECT question.name, a, b, c, correct 
+    FROM $questionTableName
+    JOIN $countryTableName ON $questionTableName.country_id = $countryTableName.id
+    WHERE $countryTableName.name = ?
+  "
+);
 
-sendResponse(["response" => $response]);
+$stmt->bind_param("s", $_GET["country"]);
 
-$conn->close();
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) sendResponse();
+
+$questions = $result->fetch_all(MYSQLI_ASSOC);
+shuffle($questions);
+$question = $questions[0];
+
+$array = [
+  "name"    => $question["name"],
+  "a"       => $question["a"],
+  "b"       => $question["b"],
+  "c"       => $question["c"],
+  "correct" => $question["correct"],
+];
+
+sendResponse($array);
 
 
 
 
-function sendResponse($array = ["response" => "mine pekki"]) {
+function sendResponse($array = ["response" => "riiki ei leitud"]) {
   global $conn;
   if ($conn) $conn->close();
 

@@ -4,7 +4,7 @@ require 'DBconfig.php';
 $conn = new mysqli($hostname, $username, $password, $DBname);
 if ($conn->connect_error) exit("Andmebaasi ühendus ebaõnnestus");
 
-$result = $conn->query("SELECT * FROM $tableName");
+$result = $conn->query("SELECT * FROM $countryTableName");
 if (!$result) exit("Riikide infot ei leitud");
 
 $countriesArray = [];
