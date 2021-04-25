@@ -1,7 +1,7 @@
 <?php
-require '../DBconfig.php';
+if (!$_GET["country"]) exit(sendResponse());
 
-error_reporting(-1);
+require '../DBconfig.php';
 
 session_start();
 
@@ -12,7 +12,7 @@ if ($conn->connect_error) sendResponse(["response" => "andmebaasiühendus ebaõn
 mysqli_set_charset($conn, "utf8");
 
 $stmt = $conn->prepare(
-  " SELECT question.name, a, b, c, correct 
+  " SELECT $questionTableName.name, a, b, c, correct 
     FROM $questionTableName
     JOIN $countryTableName ON $questionTableName.country_id = $countryTableName.id
     WHERE $countryTableName.name = ?
