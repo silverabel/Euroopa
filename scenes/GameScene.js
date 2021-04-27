@@ -25,6 +25,10 @@ class GameScene extends Phaser.Scene {
 
     this.load.svg('wheelGood', 'images/wheelGood.svg');
     this.load.svg('wheelBad', 'images/wheelBad.svg');
+
+    this.load.svg('titlepage', 'images/titlepage.svg');
+    this.load.svg('buttonStart', 'images/buttonStart.svg');
+    this.load.svg('buttonRules', 'images/buttonRules.svg');
   }
  
   create() {
@@ -63,7 +67,6 @@ class GameScene extends Phaser.Scene {
         this.setFill(countryObject, 'currentCountry');
       }
       else {
-        countryObject.setInteractive();
         Math.random() > 0.8 ? this.setFill(countryObject, 'countryLockdown')
                             : this.setFill(countryObject, 'country');
       }
@@ -145,11 +148,38 @@ class GameScene extends Phaser.Scene {
       this.wheelButton.visible = false;
       this.wheelButton.disableInteractive();
 
+      this.activeWheel.setInteractive();
+
       this.wheelSpinning = true;
       this.wheelSpeed = Phaser.Math.Between(10, 40);
     });
 
+    this.wheelGood.on('pointerdown', () => {
+      this.finishWheel();
+    });
+
+    this.wheelBad.on('pointerdown', () => {
+      this.finishWheel();
+    });
+
     // Wheel end
+
+
+    // Titlepage
+    
+    this.titlepage = this.add.image(960, 540, 'titlepage');
+    this.buttonStart = this.add.image(960, 740, 'buttonStart');
+    this.buttonRules = this.add.image(960, 850, 'buttonRules');
+
+    this.buttonStart.setInteractive();
+    this.buttonStart.on('pointerdown', () => {
+      this.titlepage.visible = false;
+      this.buttonStart.visible = false;
+      this.buttonRules.visible = false;
+      this.countries.children.iterate(country => {
+        if (country !== this.currentCountry) country.setInteractive();
+      });
+    });
   }
 
   update() {
@@ -160,7 +190,6 @@ class GameScene extends Phaser.Scene {
       }
       else {
         this.wheelSpinning = false;
-
 
         let winner = Math.floor(this.activeWheel.angle / 60);
         let message = '';
@@ -189,6 +218,8 @@ class GameScene extends Phaser.Scene {
         this.activeWheel.angle = 0;
         this.activeWheel.visible = false;
         this.wheelTriangle.visible = false;
+
+        this.activeWheel.disableInteractive();
 
         this.countries.children.iterate(country => {
           if (country !== this.currentCountry) country.setInteractive();
@@ -251,5 +282,12 @@ class GameScene extends Phaser.Scene {
     this.modalButtonA.visible = visibility;
     this.modalButtonB.visible = visibility;
     this.modalButtonC.visible = visibility;
+  }
+
+  finishWheel() {
+    const afterSpeed = 5;
+    if (this.wheelSpeed < afterSpeed) return;
+    this.activeWheel.angle += ((this.wheelSpeed - afterSpeed) ^ 2) * 10 / 2;
+    this.wheelSpeed = afterSpeed;
   }
 }
