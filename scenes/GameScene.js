@@ -13,6 +13,12 @@ class GameScene extends Phaser.Scene {
       modalButton: 0x000000,
       modalButtonHover: 0x333333,
     }
+
+    this.inventory = {
+      vaccine: 5,
+      drug: 5,
+      ticket: 5,
+    }
   }
 
   preload() {
@@ -30,6 +36,8 @@ class GameScene extends Phaser.Scene {
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
     this.load.svg('buttonRules', 'images/buttonRules.svg');
+
+    this.load.svg('inventory', 'images/inventory.svg')
   }
  
   create() {
@@ -188,6 +196,32 @@ class GameScene extends Phaser.Scene {
       
       this.setCountryInteractivity(true);
     });
+
+    // Inventory
+
+    let inventoryImagePosition = {x: 100, y: 800}
+    this.inventoryImage = this.add.image(inventoryImagePosition.x, inventoryImagePosition.y, 'inventory');
+    
+    this.drugCount = this.add.text(
+      inventoryImagePosition.x + 50,
+      inventoryImagePosition.y - 100, 
+      this.inventory.drug, 
+      { fill: 'black', font: '32px', align: 'center' }
+    ).setOrigin(0.5);
+
+    this.ticketCount = this.add.text(
+      inventoryImagePosition.x + 50,
+      inventoryImagePosition.y + 40, 
+      this.inventory.ticket, 
+      { fill: 'black', font: '32px', align: 'center' }
+    ).setOrigin(0.5);
+
+    this.vaccineCount = this.add.text(
+      inventoryImagePosition.x + 50,
+      inventoryImagePosition.y + 180, 
+      this.inventory.vaccine, 
+      { fill: 'black', font: '32px', align: 'center' }
+    ).setOrigin(0.5);
   }
 
   update() {
@@ -203,25 +237,68 @@ class GameScene extends Phaser.Scene {
         let message = '';
         switch (winner) {
           case 0:
-            message = this.activeWheel == this.wheelGood ? '3x boonus' : 'haigestusid viirusse';
+            if (this.activeWheel === this.wheelGood) {
+              message = '3x boonus';
+              this.inventory.drug += 1;
+              this.inventory.ticket += 1;
+              this.inventory.vaccine += 1;
+            }
+            else {
+              message = 'haigestusid viirusse';
+              this.inventory.drug -= 1;
+            }
             break;
           case 1:
-            message = this.activeWheel == this.wheelGood ? 'vaktsiin' : 'vaktsiin purunes';
+            if (this.activeWheel === this.wheelGood) {
+              message = 'vaktsiin';
+              this.inventory.vaccine += 1;
+            }
+            else {
+              message = 'vaktsiin purunes';
+              this.inventory.vaccine -= 1;
+            }
             break;
           case 2:
             message = this.activeWheel == this.wheelGood ? 'vaba pääse' : 'vaba pääse';
+            if (this.activeWheel === this.wheelGood) {
+              message = 'vaba pääse';
+            }
+            else {
+              message = 'vaba pääse';
+            }
             break;
           case -3:
-            message = this.activeWheel == this.wheelGood ? 'boonuse valik' : 'riik läheb lukku';
+            if (this.activeWheel === this.wheelGood) {
+              message = 'boonuse valik';
+              this.inventory.vaccine += 1;
+            }
+            else {
+              message = 'riik läheb lukku';
+            }
             break;
           case -2:
-            message = this.activeWheel == this.wheelGood ? 'lennupilet' : 'kaotasid lennupileti';
+            if (this.activeWheel === this.wheelGood) {
+              message = 'lennupilet';
+              this.inventory.ticket += 1;
+            }
+            else {
+              message = 'kaotasid lennupileti';
+              this.inventory.ticket += 1;
+            }
             break;
           case -1:
-            message = this.activeWheel == this.wheelGood ? 'ravim' : 'kaotasid ravimi';
+            if (this.activeWheel === this.wheelGood) {
+              message = 'ravim';
+              this.inventory.drug += 1;
+            }
+            else {
+              message = 'kaotasid ravimi';
+              this.inventory.drug += 1;
+            }
         }
 
         alert('Tulemus: ' + message);
+        this.updateInventory();
 
         this.activeWheel.angle = 0;
         this.activeWheel.visible = false;
@@ -296,5 +373,11 @@ class GameScene extends Phaser.Scene {
       }
       else country.disableInteractive();
     });
-  } 
+  }
+
+  updateInventory() {
+    this.drugCount.setText(this.inventory.drug);
+    this.ticketCount.setText(this.inventory.ticket);
+    this.vaccineCount.setText(this.inventory.vaccine);
+  }
 }
