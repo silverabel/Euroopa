@@ -5,12 +5,13 @@ class GameScene extends Phaser.Scene {
 
   init() {
     this.colorConfig = {
-      currentCountry: 0xC7CF15,
-      countryHover: 0x7D8207,
       country: 0x0D4D82,
+      currentCountry: 0xC7CF15,
+      visitedCountry: 0xFFFFFF,
+      countryHover: 0x7D8207,
+      countryLockdown: 0xCF1B15,
       modalButton: 0x000000,
       modalButtonHover: 0x333333,
-      countryLockdown: 0xCF1B15,
     }
   }
 
@@ -45,19 +46,24 @@ class GameScene extends Phaser.Scene {
       });
   
       countryObject.on('pointerout', () => {
-        if (countryObject !== this.currentCountry) this.setFill(countryObject, 'country');
+        if (countryObject === this.currentCountry) return;
+        countryObject.visited ? this.setFill(countryObject, 'visitedCountry') : this.setFill(countryObject, 'country');
       });
   
       countryObject.on('pointerdown', (pointer, x, y, event) => {
-        this.setFill(countryObject, 'currentCountry');
-        this.setFill(this.currentCountry, 'country');
-        this.currentCountry = countryObject;
+        this.currentCountry.visited ? this.setFill(this.currentCountry, 'visitedCountry') : this.setFill(this.currentCountry, 'country');
 
-        this.countries.children.iterate(country => {
-          country.disableInteractive();
-        });
+        this.currentCountry = countryObject;
+        this.setFill(countryObject, 'currentCountry');
 
         this.fetchQuestion();
+
+        this.setCountryInteractivity(false);
+
+        
+
+        
+
         this.openModal();
       });
       // Country event listeners end
@@ -65,10 +71,12 @@ class GameScene extends Phaser.Scene {
       if (country.name === 'estonia') {
         this.currentCountry = countryObject;
         this.setFill(countryObject, 'currentCountry');
+        countryObject.visited = true;
       }
       else {
         Math.random() > 0.8 ? this.setFill(countryObject, 'countryLockdown')
                             : this.setFill(countryObject, 'country');
+        countryObject.visited = false;
       }
     };
     
@@ -101,6 +109,7 @@ class GameScene extends Phaser.Scene {
         if (button.text == this.questionCorrectAnswer) {
           alert('Õige vastus');
           this.activeWheel = this.wheelGood;
+          this.currentCountry.visited = true;
         }
         else {
           alert('Vale vastus');
@@ -176,9 +185,8 @@ class GameScene extends Phaser.Scene {
       this.titlepage.visible = false;
       this.buttonStart.visible = false;
       this.buttonRules.visible = false;
-      this.countries.children.iterate(country => {
-        if (country !== this.currentCountry) country.setInteractive();
-      });
+      
+      this.setCountryInteractivity(true);
     });
   }
 
@@ -221,19 +229,9 @@ class GameScene extends Phaser.Scene {
 
         this.activeWheel.disableInteractive();
 
-        this.countries.children.iterate(country => {
-          if (country !== this.currentCountry) country.setInteractive();
-        });
+        this.setCountryInteractivity(true);
       } 
     }
-  }
-
-  setOnlyNeighboursInteractive() {
-    this.countries.children.iterate(country => {
-      country.disableInteractive();
-      if (this.physics.overlap(country, this.currentCountry)) country.setInteractive();
-    });
-    this.currentCountry.setInteractive();
   }
 
   setFill(object, colorCode) {
@@ -290,4 +288,13 @@ class GameScene extends Phaser.Scene {
     this.activeWheel.angle += ((this.wheelSpeed - afterSpeed) ^ 2) * 10 / 2;
     this.wheelSpeed = afterSpeed;
   }
+
+  setCountryInteractivity(interactivity) {
+    this.countries.children.iterate(country => {
+      if (interactivity) {
+        if (country !== this.currentCountry) country.setInteractive();
+      }
+      else country.disableInteractive();
+    });
+  } 
 }
