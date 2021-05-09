@@ -15,10 +15,17 @@ class GameScene extends Phaser.Scene {
     }
 
     this.inventory = {
-      vaccine: 5,
-      drug: 5,
-      ticket: 5,
+      vaccine: 1,
+      drug: 1,
+      ticket: 1,
     }
+
+    this.customCountries = new Map();
+    this.customCountries
+      .set('norway', ['sweden', 'finland', 'russia', ])
+      .set('sweden', ['norway', 'finland', 'denmark', ])
+      .set('finland', ['norway', 'sweden', 'russia', 'estonia', ])
+      .set('russia', ['norway', 'finland', 'estonia', 'latvia', 'belarus', 'ukraine', 'georgia', 'azerbaijan', 'kazakhstan', ]);
   }
 
   preload() {
@@ -37,7 +44,8 @@ class GameScene extends Phaser.Scene {
     this.load.svg('buttonStart', 'images/buttonStart.svg');
     this.load.svg('buttonRules', 'images/buttonRules.svg');
 
-    this.load.svg('inventory', 'images/inventory.svg')
+    this.load.svg('inventory', 'images/inventory.svg');
+    this.load.svg('airplane', 'images/airplane.svg');
   }
  
   create() {
@@ -51,15 +59,31 @@ class GameScene extends Phaser.Scene {
       // Set country event listeners
       countryObject.on('pointerover', () => {
         this.setFill(countryObject, 'countryHover');
+
+        if (!this.checkNeighbours(countryObject, this.currentCountry)) {
+
+          if (countryObject.texture.key === 'norway') this.airplane.setPosition(610, 424);
+          else if (countryObject.texture.key === 'sweden') this.airplane.setPosition(736, 307);
+          else this.airplane.setPosition(countryObject.getCenter().x, countryObject.getCenter().y);
+          this.airplane.visible = true;
+        }
       });
   
       countryObject.on('pointerout', () => {
         if (countryObject === this.currentCountry) return;
         countryObject.visited ? this.setFill(countryObject, 'visitedCountry') : this.setFill(countryObject, 'country');
+
+        this.airplane.visible = false;
       });
   
       countryObject.on('pointerdown', (pointer, x, y, event) => {
         this.currentCountry.visited ? this.setFill(this.currentCountry, 'visitedCountry') : this.setFill(this.currentCountry, 'country');
+
+        this.airplane.visible = false;
+        if (!this.checkNeighbours(countryObject, this.currentCountry)) {
+          this.inventory.ticket--;
+          this.updateInventory();
+        }
 
         this.currentCountry = countryObject;
         this.setFill(countryObject, 'currentCountry');
@@ -67,10 +91,6 @@ class GameScene extends Phaser.Scene {
         this.fetchQuestion();
 
         this.setCountryInteractivity(false);
-
-        
-
-        
 
         this.openModal();
       });
@@ -82,8 +102,7 @@ class GameScene extends Phaser.Scene {
         countryObject.visited = true;
       }
       else {
-        Math.random() > 0.8 ? this.setFill(countryObject, 'countryLockdown')
-                            : this.setFill(countryObject, 'country');
+        this.setFill(countryObject, 'country');
         countryObject.visited = false;
       }
     };
@@ -222,6 +241,12 @@ class GameScene extends Phaser.Scene {
       this.inventory.vaccine, 
       { fill: 'black', font: '32px', align: 'center' }
     ).setOrigin(0.5);
+  
+    // Inventory end
+
+    this.airplane = this.add.image(0, 0, 'airplane');
+    this.airplane.setScale(0.5);
+    this.airplane.visible = false;
   }
 
   update() {
@@ -245,6 +270,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'haigestusid viirusse';
+              if (this.inventory.drug < 1) return alert('Mäng läbi :/(//(/');
               this.inventory.drug -= 1;
             }
             break;
@@ -255,7 +281,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'vaktsiin purunes';
-              this.inventory.vaccine -= 1;
+              if (this.inventory.vaccine > 0) this.inventory.vaccine -= 1;
             }
             break;
           case 2:
@@ -283,7 +309,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'kaotasid lennupileti';
-              this.inventory.ticket += 1;
+              if (this.inventory.ticket > 0) this.inventory.ticket -= 1;
             }
             break;
           case -1:
@@ -293,7 +319,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'kaotasid ravimi';
-              this.inventory.drug += 1;
+              if (this.inventory.drug > 0) this.inventory.drug -= 1;
             }
         }
 
@@ -305,6 +331,8 @@ class GameScene extends Phaser.Scene {
         this.wheelTriangle.visible = false;
 
         this.activeWheel.disableInteractive();
+
+        if (this.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return alert('Mäng läbi :/(//(/');
 
         this.setCountryInteractivity(true);
       } 
@@ -369,7 +397,7 @@ class GameScene extends Phaser.Scene {
   setCountryInteractivity(interactivity) {
     this.countries.children.iterate(country => {
       if (interactivity) {
-        if (country !== this.currentCountry) country.setInteractive();
+        if (country !== this.currentCountry && (this.inventory.ticket > 0 || this.checkNeighbours(country, this.currentCountry))) country.setInteractive();
       }
       else country.disableInteractive();
     });
@@ -379,5 +407,24 @@ class GameScene extends Phaser.Scene {
     this.drugCount.setText(this.inventory.drug);
     this.ticketCount.setText(this.inventory.ticket);
     this.vaccineCount.setText(this.inventory.vaccine);
+  }
+
+  checkNeighbours(country1, country2) {
+    if (
+      (country1.texture.key === 'ukraine' && country2.texture.key === 'serbia') || 
+      (country1.texture.key === 'serbia' && country2.texture.key === 'ukraine'))
+      return false;
+
+    if (this.customCountries.has(country1.texture.key)) {
+      if (this.customCountries.get(country1.texture.key).includes(country2.texture.key)) return true;
+      return false;
+    }
+
+    if (this.customCountries.has(country2.texture.key)) {
+      if (this.customCountries.get(country2.texture.key).includes(country1.texture.key)) return true;
+      return false;
+    }
+
+    return this.physics.overlap(country1, country2) ? true : false;
   }
 }

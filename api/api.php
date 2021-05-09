@@ -14,12 +14,22 @@ mysqli_set_charset($conn, "utf8");
 $stmt = $conn->prepare(
   " SELECT $questionTableName.name, a, b, c, correct 
     FROM $questionTableName
-    JOIN $countryTableName ON $questionTableName.country_id = $countryTableName.id
+    LEFT JOIN $countryTableName ON $questionTableName.country_id = $countryTableName.id
     WHERE $countryTableName.name = ?
+    LIMIT ?, 1
   "
 );
 
-$stmt->bind_param("s", $_GET["country"]);
+if (rand(0, 1) === 0) {
+  $offset = rand(0, 1);
+  $stmt->bind_param("si", $_GET["country"], $offset);
+}
+else {
+  $param = "europe";
+  $offset = rand(0, 49);
+  $stmt->bind_param("si", $param, $offset);
+}
+
 
 $stmt->execute();
 $result = $stmt->get_result();

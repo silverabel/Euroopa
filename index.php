@@ -4,7 +4,7 @@ require 'DBconfig.php';
 $conn = new mysqli($hostname, $username, $password, $DBname);
 if ($conn->connect_error) exit("Andmebaasi ühendus ebaõnnestus");
 
-$result = $conn->query("SELECT * FROM $countryTableName");
+$result = $conn->query("SELECT * FROM $countryTableName WHERE id > 0");
 if (!$result) exit("Riikide infot ei leitud");
 
 $countriesArray = [];
@@ -32,18 +32,24 @@ $conn->close();
 <script>
 let countriesArray = <?php echo json_encode($countriesArray)?>;
 
-let game = new Phaser.Game({
-  width: 1920,
-  height: 1080,
+let config = {
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1920,
+    height: 1080,
+  },
   backgroundColor: 0x0072CE,
   scene: [GameScene],
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false
-    }
+      debug: false,
+    },
   },
-});
+}
+
+let game = new Phaser.Game(config);
 </script>
 </body>
 </html>
