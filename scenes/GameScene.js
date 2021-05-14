@@ -7,7 +7,7 @@ class GameScene extends Phaser.Scene {
     this.colorConfig = {
       country: 0x0D4D82,
       currentCountry: 0xC7CF15,
-      visitedCountry: 0xFFFFFF,
+      visitedCountry: 0x40AA78,
       countryHover: 0x7D8207,
       countryLockdown: 0xCF1B15,
       modalButton: 0x000000,
@@ -43,6 +43,7 @@ class GameScene extends Phaser.Scene {
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
     this.load.svg('buttonRules', 'images/buttonRules.svg');
+    this.load.svg('logo', 'images/logo.svg');
 
     this.load.svg('inventory', 'images/inventory.svg');
     this.load.svg('airplane', 'images/airplane.svg');
@@ -110,7 +111,7 @@ class GameScene extends Phaser.Scene {
     // Modal start
     this.modal = this.add.image(960, 540, 'modal');
     this.modalTitle = this.add.text(960, 350, 'Küsimus', { fill: '#000000', font: '64px' }).setOrigin(0.5);
-    this.modalQuestion = this.add.text(960, 540, '', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+    this.modalQuestion = this.add.text(960, 540, '', { fill: '#000000', font: '32px', align: 'center', wordWrap: { width: 900 } }).setOrigin(0.5);
 
     this.modalButtonA = this.add.text(640, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
     this.setFill(this.modalButtonA, 'modalButton');
@@ -187,7 +188,7 @@ class GameScene extends Phaser.Scene {
       this.activeWheel.setInteractive();
 
       this.wheelSpinning = true;
-      this.wheelSpeed = Phaser.Math.Between(10, 40);
+      this.wheelSpeed = Phaser.Math.Between(10, 30);
     });
 
     this.wheelGood.on('pointerdown', () => {
@@ -201,8 +202,9 @@ class GameScene extends Phaser.Scene {
     // Wheel end
 
 
-    // Titlepage
-    
+    // Logo + Titlepage
+    this.logo = this.add.image(400, 125, 'logo');
+    this.logo.setScale(0.4);
     this.titlepage = this.add.image(960, 540, 'titlepage');
     this.buttonStart = this.add.image(960, 740, 'buttonStart');
     this.buttonRules = this.add.image(960, 850, 'buttonRules');
@@ -245,7 +247,8 @@ class GameScene extends Phaser.Scene {
     // Inventory end
 
     this.airplane = this.add.image(0, 0, 'airplane');
-    this.airplane.setScale(0.5);
+    this.airplane.setTintFill(0xFFFFFF);
+    this.airplane.setScale(0.25);
     this.airplane.visible = false;
   }
 
