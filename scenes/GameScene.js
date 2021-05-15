@@ -115,6 +115,8 @@ class GameScene extends Phaser.Scene {
         this.setFill(countryObject, 'country');
         countryObject.visited = false;
       }
+
+      countryObject.lockdownDuration = 0;
     };
     
     // Modal start
@@ -278,7 +280,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'haigestusid viirusse';
-              if (this.inventory.drug < 1) return alert('Mäng läbi :/(//(/');
+              if (this.inventory.drug < 1) return this.gameOver();
               this.inventory.drug -= 1;
             }
             break;
@@ -309,6 +311,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'riik läheb lukku';
+              this.lockdownRandomCountry();
             }
             break;
           case -2:
@@ -341,7 +344,7 @@ class GameScene extends Phaser.Scene {
 
         this.activeWheel.disableInteractive();
 
-        if (this.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return alert('Mäng läbi :/(//(/');
+        if (this.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return this.gameOver();
 
         this.setCountryInteractivity(true);
       } 
@@ -404,12 +407,27 @@ class GameScene extends Phaser.Scene {
   }
 
   setCountryInteractivity(interactivity) {
+    let interactiveCountryCount = 0;
+
     this.countries.children.iterate(country => {
       if (interactivity) {
-        if (country !== this.currentCountry && (this.inventory.ticket > 0 || this.checkNeighbours(country, this.currentCountry))) country.setInteractive();
+        if (country.lockdownDuration > 0) {
+          country.lockdownDuration--;
+          this.removeLockdown(country);
+        }
+
+        if (country !== this.currentCountry &&
+            country.lockdownDuration < 1 &&
+            (this.inventory.ticket > 0 || this.checkNeighbours(country, this.currentCountry))
+        ) {
+          country.setInteractive();
+          interactiveCountryCount++;
+        }
       }
       else country.disableInteractive();
     });
+
+    if (interactivity && !interactiveCountryCount) return this.gameOver();
   }
 
   updateInventory() {
@@ -442,5 +460,35 @@ class GameScene extends Phaser.Scene {
     this.wheelTriangle.visible = true;
     this.wheelButton.visible = true;
     this.wheelButton.setInteractive();
+  }
+
+  lockdownRandomCountry() {
+    let countryFound = false;
+    let lastCountry = null;
+    this.countries.children.iterate(country => {
+      if (countryFound) return;
+      if (country !== this.currentCountry && Math.random() < 0.02) {
+        this.applyLockdown(country);
+        countryFound = true;
+      }
+      lastCountry = country;
+    });
+    if (!countryFound) this.applyLockdown(lastCountry);
+  }
+
+  gameOver() {
+    alert('Mäng läbi :/(//(/');
+  }
+
+  applyLockdown(country) {
+    country.lockdownDuration = 4;
+    this.setFill(country, 'countryLockdown');
+  }
+
+  removeLockdown(country) {
+    if (country.lockdownDuration > 0) return;
+
+    if (country.visited) this.setFill(country, 'countryVisited');
+    else this.setFill(country, 'country');
   }
 }
