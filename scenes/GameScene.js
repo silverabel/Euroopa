@@ -25,7 +25,10 @@ class GameScene extends Phaser.Scene {
       .set('norway', ['sweden', 'finland', 'russia', ])
       .set('sweden', ['norway', 'finland', 'denmark', ])
       .set('finland', ['norway', 'sweden', 'russia', 'estonia', ])
+      .set('kazakhstan', ['russia'])
       .set('russia', ['norway', 'finland', 'estonia', 'latvia', 'belarus', 'ukraine', 'georgia', 'azerbaijan', 'kazakhstan', ]);
+    
+      this.freePass = false;
   }
 
   preload() {
@@ -42,7 +45,6 @@ class GameScene extends Phaser.Scene {
 
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
-    this.load.svg('buttonRules', 'images/buttonRules.svg');
     this.load.svg('logo', 'images/logo.svg');
 
     this.load.svg('inventory', 'images/inventory.svg');
@@ -89,10 +91,17 @@ class GameScene extends Phaser.Scene {
         this.currentCountry = countryObject;
         this.setFill(countryObject, 'currentCountry');
 
-        this.fetchQuestion();
-
         this.setCountryInteractivity(false);
 
+        if (this.freePass) {
+          alert('vaba pääse, küsimusele ei pea vastama');
+          this.activeWheel = this.wheelGood;
+          this.activateWheel();
+          this.freePass = false;
+          return;
+        }
+
+        this.fetchQuestion();
         this.openModal();
       });
       // Country event listeners end
@@ -147,10 +156,7 @@ class GameScene extends Phaser.Scene {
         this.setModalVisibility(false);
         this.clearQuestion();
 
-        this.activeWheel.visible = true;
-        this.wheelTriangle.visible = true;
-        this.wheelButton.visible = true;
-        this.wheelButton.setInteractive();
+        this.activateWheel();
       });
     });
     // Modal buttons event listeners end
@@ -204,10 +210,9 @@ class GameScene extends Phaser.Scene {
 
     // Logo + Titlepage
     this.logo = this.add.image(400, 125, 'logo');
-    this.logo.setScale(0.4);
     this.titlepage = this.add.image(960, 540, 'titlepage');
     this.buttonStart = this.add.image(960, 740, 'buttonStart');
-    this.buttonRules = this.add.image(960, 850, 'buttonRules');
+    this.buttonRules = this.add.text(960, 830, 'Reeglid', { fill: '#C6CF14', font: '32px', align: 'center' }).setOrigin(0.5);
 
     this.buttonStart.setInteractive();
     this.buttonStart.on('pointerdown', () => {
@@ -291,6 +296,7 @@ class GameScene extends Phaser.Scene {
             message = this.activeWheel == this.wheelGood ? 'vaba pääse' : 'vaba pääse';
             if (this.activeWheel === this.wheelGood) {
               message = 'vaba pääse';
+              this.freePass = true;
             }
             else {
               message = 'vaba pääse';
@@ -429,5 +435,12 @@ class GameScene extends Phaser.Scene {
     }
 
     return this.physics.overlap(country1, country2) ? true : false;
+  }
+
+  activateWheel() {
+    this.activeWheel.visible = true;
+    this.wheelTriangle.visible = true;
+    this.wheelButton.visible = true;
+    this.wheelButton.setInteractive();
   }
 }
