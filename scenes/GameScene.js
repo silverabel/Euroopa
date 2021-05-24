@@ -28,7 +28,11 @@ class GameScene extends Phaser.Scene {
       .set('kazakhstan', ['russia'])
       .set('russia', ['norway', 'finland', 'estonia', 'latvia', 'belarus', 'ukraine', 'georgia', 'azerbaijan', 'kazakhstan', ]);
     
-      this.freePass = false;
+    this.freePass = false;
+
+    this.getRandom = Phaser.Utils.Array.GetRandom;
+
+    this.wheelSectionNumber = 0;
   }
 
   preload() {
@@ -49,6 +53,10 @@ class GameScene extends Phaser.Scene {
 
     this.load.svg('inventory', 'images/inventory.svg');
     this.load.svg('airplane', 'images/airplane.svg');
+
+    this.load.audio('wheel', 'sounds/wheel.wav');
+    this.load.audio('hover', 'sounds/hover.wav');
+    this.load.audio('question', 'sounds/question.wav');
   }
  
   create() {
@@ -61,6 +69,8 @@ class GameScene extends Phaser.Scene {
 
       // Set country event listeners
       countryObject.on('pointerover', () => {
+        if (!this.sounds.hover.isPlaying) this.sounds.hover.play();
+
         this.setFill(countryObject, 'countryHover');
 
         if (!this.checkNeighbours(countryObject, this.currentCountry)) {
@@ -118,7 +128,7 @@ class GameScene extends Phaser.Scene {
 
       countryObject.lockdownDuration = 0;
     };
-    
+
     // Modal start
     this.modal = this.add.image(960, 540, 'modal');
     this.modalTitle = this.add.text(960, 350, 'Küsimus', { fill: '#000000', font: '64px' }).setOrigin(0.5);
@@ -159,6 +169,8 @@ class GameScene extends Phaser.Scene {
         this.clearQuestion();
 
         this.activateWheel();
+
+        this.sounds.question.stop();
       });
     });
     // Modal buttons event listeners end
@@ -211,7 +223,7 @@ class GameScene extends Phaser.Scene {
 
 
     // Logo + Titlepage
-    this.logo = this.add.image(400, 125, 'logo');
+    this.logo = this.add.image(240, 80, 'logo');
     this.titlepage = this.add.image(960, 540, 'titlepage');
     this.buttonStart = this.add.image(960, 740, 'buttonStart');
     this.buttonRules = this.add.text(960, 830, 'Reeglid', { fill: '#C6CF14', font: '32px', align: 'center' }).setOrigin(0.5);
@@ -257,6 +269,13 @@ class GameScene extends Phaser.Scene {
     this.airplane.setTintFill(0xFFFFFF);
     this.airplane.setScale(0.25);
     this.airplane.visible = false;
+
+    this.sounds = {
+      wheel: this.sound.add('wheel'),
+      hover: this.sound.add('hover'),
+      question: this.sound.add('question'),
+    };
+    this.sounds.question.loop = true;
   }
 
   update() {
@@ -264,6 +283,9 @@ class GameScene extends Phaser.Scene {
       if (this.wheelSpeed > 0) {
         this.activeWheel.angle += this.wheelSpeed;
         this.wheelSpeed -= 0.1;
+
+        if (Math.floor(this.activeWheel.angle / 60) !== this.wheelSectionNumber) this.sounds.wheel.play();
+        this.wheelSectionNumber = Math.floor(this.activeWheel.angle / 60);
       }
       else {
         this.wheelSpinning = false;
@@ -273,10 +295,8 @@ class GameScene extends Phaser.Scene {
         switch (winner) {
           case 0:
             if (this.activeWheel === this.wheelGood) {
-              message = '3x boonus';
-              this.inventory.drug += 1;
-              this.inventory.ticket += 1;
-              this.inventory.vaccine += 1;
+              message = 'special bonus';
+              this.handleSpecialBonus();
             }
             else {
               message = 'haigestusid viirusse';
@@ -306,7 +326,9 @@ class GameScene extends Phaser.Scene {
             break;
           case -3:
             if (this.activeWheel === this.wheelGood) {
-              message = 'boonuse valik';
+              message = '3x boonus';
+              this.inventory.drug += 1;
+              this.inventory.ticket += 1;
               this.inventory.vaccine += 1;
             }
             else {
@@ -356,6 +378,8 @@ class GameScene extends Phaser.Scene {
   }
 
   openModal() {
+    this.sounds.question.play();
+
     this.setModalVisibility(true);
     this.modalButtonA.setInteractive();
     this.modalButtonB.setInteractive();
@@ -463,19 +487,13 @@ class GameScene extends Phaser.Scene {
   }
 
   lockdownRandomCountry() {
-    let countryFound = false;
-    let lastCountry = null;
-    this.countries.children.iterate(country => {
-      if (countryFound) return;
-      if (country !== this.currentCountry && Math.random() < 0.02) {
-        this.applyLockdown(country);
-        countryFound = true;
-      }
-      lastCountry = country;
-    });
-    if (!countryFound) this.applyLockdown(lastCountry);
+    this.applyLockdown(this.getRandom(this.getNotCurrentCountries()));
   }
 
+  getNotCurrentCountries() {
+    return this.countries.getChildren().filter(country => country !== this.currentCountry);
+  }
+ 
   gameOver() {
     alert('Mäng läbi :/(//(/');
   }
@@ -490,5 +508,16 @@ class GameScene extends Phaser.Scene {
 
     if (country.visited) this.setFill(country, 'countryVisited');
     else this.setFill(country, 'country');
+  }
+
+  handleSpecialBonus() {
+    const minValue = Math.min(...[this.inventory.drug, this.inventory.ticket, this.inventory.vaccine]);
+    let minValueArray = [];
+    for (let key in this.inventory) {
+      if (this.inventory[key] === minValue) minValueArray.push(key);
+    }
+
+    if (minValueArray.length === 1) this.inventory[minValueArray[0]] += 1;
+    else this.inventory[this.getRandom(minValueArray)] += 1;
   }
 }
