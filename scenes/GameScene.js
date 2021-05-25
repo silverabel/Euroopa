@@ -12,13 +12,13 @@ class GameScene extends Phaser.Scene {
       countryLockdown: 0xCF1B15,
       modalButton: 0x000000,
       modalButtonHover: 0x333333,
-    }
+    };
 
     this.inventory = {
       vaccine: 1,
       drug: 1,
       ticket: 1,
-    }
+    };
 
     this.score = {
       points: 0,
@@ -35,7 +35,10 @@ class GameScene extends Phaser.Scene {
       .set('kazakhstan', ['russia'])
       .set('russia', ['norway', 'finland', 'estonia', 'latvia', 'belarus', 'ukraine', 'georgia', 'azerbaijan', 'kazakhstan', ]);
     
-    this.freePass = false;
+    this.buffs = {
+      vaccine: false,
+      freepass: false,
+    };
 
     this.getRandom = Phaser.Utils.Array.GetRandom;
 
@@ -60,6 +63,8 @@ class GameScene extends Phaser.Scene {
 
     this.load.svg('inventory', 'images/inventory.svg');
     this.load.svg('airplane', 'images/airplane.svg');
+
+    this.load.svg('inventoryOverlay', 'images/inventoryOverlay.svg');
 
     this.load.audio('wheel', 'sounds/wheel.wav');
     this.load.audio('hover', 'sounds/hover.wav');
@@ -110,11 +115,11 @@ class GameScene extends Phaser.Scene {
 
         this.setCountryInteractivity(false);
 
-        if (this.freePass) {
+        if (this.buffs.freePass) {
           alert('vaba pääse, küsimusele ei pea vastama');
           this.activeWheel = this.wheelGood;
           this.activateWheel();
-          this.freePass = false;
+          this.buffs.freePass = false;
 
           this.handleCountrySuccess();
           
@@ -123,6 +128,8 @@ class GameScene extends Phaser.Scene {
 
         this.fetchQuestion();
         this.openModal();
+
+        this.activateVaccine();
       });
       // Country event listeners end
 
@@ -173,12 +180,20 @@ class GameScene extends Phaser.Scene {
           this.activeWheel = this.wheelBad;
         }
 
+        this.deactivateVaccine();
+
         this.setModalVisibility(false);
         this.clearQuestion();
 
-        this.activateWheel();
-
         this.sounds.question.stop();
+
+        if (this.activeWheel === this.wheelBad && this.buffs.vaccine) {
+          alert('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
+          this.setCountryInteractivity(true);
+        }
+        else this.activateWheel();
+
+        this.buffs.vaccine = false;
       });
     });
     // Modal buttons event listeners end
@@ -245,14 +260,14 @@ class GameScene extends Phaser.Scene {
       this.setCountryInteractivity(true);
 
       setInterval(() => {
-        this.score.time += 1;
+        this.score.time++;
         this.scoreTime.setText('Aeg: ' + this.score.time);
       }, 1000);
     });
 
     // Inventory
 
-    let inventoryImagePosition = {x: 100, y: 800}
+    const inventoryImagePosition = { x: 100, y: 800 }
     this.inventoryImage = this.add.image(inventoryImagePosition.x, inventoryImagePosition.y, 'inventory');
     
     this.drugCount = this.add.text(
@@ -275,6 +290,16 @@ class GameScene extends Phaser.Scene {
       this.inventory.vaccine, 
       { fill: 'black', font: '32px', align: 'center' }
     ).setOrigin(0.5);
+
+    this.vaccineOverlay = this.add.image(inventoryImagePosition.x - 10, inventoryImagePosition.y + 130, 'inventoryOverlay');
+    this.vaccineOverlay.setAlpha(0);
+    this.vaccineOverlay.on('pointerdown', () => {
+      this.buffs.vaccine = true;
+      this.deactivateVaccine();
+      alert('Vaktsiin aktiveeritud');
+      this.inventory.vaccine--;
+      this.updateInventory();
+    });
   
     // Inventory end
 
@@ -319,24 +344,24 @@ class GameScene extends Phaser.Scene {
             else {
               message = 'haigestusid viirusse';
               if (this.inventory.drug < 1) return this.gameOver();
-              this.inventory.drug -= 1;
+              this.inventory.drug--;
             }
             break;
           case 1:
             if (this.activeWheel === this.wheelGood) {
               message = 'vaktsiin';
-              this.inventory.vaccine += 1;
+              this.inventory.vaccine++;
             }
             else {
               message = 'vaktsiin purunes';
-              if (this.inventory.vaccine > 0) this.inventory.vaccine -= 1;
+              if (this.inventory.vaccine > 0) this.inventory.vaccine--;
             }
             break;
           case 2:
             message = this.activeWheel == this.wheelGood ? 'vaba pääse' : 'vaba pääse';
             if (this.activeWheel === this.wheelGood) {
               message = 'vaba pääse';
-              this.freePass = true;
+              this.buffs.freePass = true;
             }
             else {
               message = 'vaba pääse';
@@ -345,9 +370,9 @@ class GameScene extends Phaser.Scene {
           case -3:
             if (this.activeWheel === this.wheelGood) {
               message = '3x boonus';
-              this.inventory.drug += 1;
-              this.inventory.ticket += 1;
-              this.inventory.vaccine += 1;
+              this.inventory.drug++;
+              this.inventory.ticket++;
+              this.inventory.vaccine++;
             }
             else {
               message = 'riik läheb lukku';
@@ -357,21 +382,21 @@ class GameScene extends Phaser.Scene {
           case -2:
             if (this.activeWheel === this.wheelGood) {
               message = 'lennupilet';
-              this.inventory.ticket += 1;
+              this.inventory.ticket++;
             }
             else {
               message = 'kaotasid lennupileti';
-              if (this.inventory.ticket > 0) this.inventory.ticket -= 1;
+              if (this.inventory.ticket > 0) this.inventory.ticket--;
             }
             break;
           case -1:
             if (this.activeWheel === this.wheelGood) {
               message = 'ravim';
-              this.inventory.drug += 1;
+              this.inventory.drug++;
             }
             else {
               message = 'kaotasid ravimi';
-              if (this.inventory.drug > 0) this.inventory.drug -= 1;
+              if (this.inventory.drug > 0) this.inventory.drug--;
             }
         }
 
@@ -402,6 +427,8 @@ class GameScene extends Phaser.Scene {
     this.modalButtonA.setInteractive();
     this.modalButtonB.setInteractive();
     this.modalButtonC.setInteractive();
+
+    
   }
 
   async fetchQuestion() {
@@ -535,7 +562,7 @@ class GameScene extends Phaser.Scene {
       if (this.inventory[key] === minValue) minValueArray.push(key);
     }
 
-    this.inventory[this.getRandom(minValueArray)] += 1;
+    this.inventory[this.getRandom(minValueArray)]++;
   }
 
   handleCorrectAnswer() {
@@ -549,5 +576,24 @@ class GameScene extends Phaser.Scene {
   handleCountrySuccess() {
     this.score.points += this.level;
     this.scorePoints.setText('Punktid: '+ this.score.points);
+  }
+
+  activateVaccine() {
+    if (this.inventory.vaccine < 1) return;
+
+    this.vaccineOverlay.setInteractive();
+    this.vaccineInterval = setInterval(this.blinkVaccine.bind(this), 100);
+  }
+
+  deactivateVaccine() {
+    clearInterval(this.vaccineInterval);
+    this.vaccineOverlay.setAlpha(0);
+    this.vaccineOverlay.disableInteractive();
+  }
+
+  blinkVaccine() {
+    if (this.vaccineOverlay.alpha > 0.5) this.vaccineOverlay.setAlpha(0);
+
+    this.vaccineOverlay.alpha += 0.1;
   }
 }
