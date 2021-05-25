@@ -568,7 +568,6 @@ class GameScene extends Phaser.Scene {
   handleCorrectAnswer() {
     alert('Õige vastus');
     this.activeWheel = this.wheelGood;
-    this.currentCountry.visited = true;
 
     this.handleCountrySuccess();
   }
@@ -576,6 +575,8 @@ class GameScene extends Phaser.Scene {
   handleCountrySuccess() {
     this.score.points += this.level;
     this.scorePoints.setText('Punktid: '+ this.score.points);
+
+    this.currentCountry.visited = true;
   }
 
   activateVaccine() {
