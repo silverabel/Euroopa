@@ -67,7 +67,7 @@ class GameScene extends Phaser.Scene {
     this.load.svg('inventoryOverlay', 'images/inventoryOverlay.svg');
 
     this.load.audio('wheel', 'sounds/wheel.wav');
-    this.load.audio('hover', 'sounds/hover.wav');
+    this.load.audio('hover', 'sounds/hover.mp3');
     this.load.audio('question', 'sounds/question.wav');
   }
  
@@ -81,7 +81,8 @@ class GameScene extends Phaser.Scene {
 
       // Set country event listeners
       countryObject.on('pointerover', () => {
-        // if (!this.sounds.hover.isPlaying) this.sounds.hover.play();
+        if (!this.sounds.hover.isPlaying) 
+          this.sounds.hover.play();
 
         this.setFill(countryObject, 'countryHover');
 
