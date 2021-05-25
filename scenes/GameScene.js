@@ -20,6 +20,13 @@ class GameScene extends Phaser.Scene {
       ticket: 1,
     }
 
+    this.score = {
+      points: 0,
+      time: 0,
+    };
+
+    this.level = 1;
+
     this.customCountries = new Map();
     this.customCountries
       .set('norway', ['sweden', 'finland', 'russia', ])
@@ -69,7 +76,7 @@ class GameScene extends Phaser.Scene {
 
       // Set country event listeners
       countryObject.on('pointerover', () => {
-        if (!this.sounds.hover.isPlaying) this.sounds.hover.play();
+        // if (!this.sounds.hover.isPlaying) this.sounds.hover.play();
 
         this.setFill(countryObject, 'countryHover');
 
@@ -108,6 +115,9 @@ class GameScene extends Phaser.Scene {
           this.activeWheel = this.wheelGood;
           this.activateWheel();
           this.freePass = false;
+
+          this.handleCountrySuccess();
+          
           return;
         }
 
@@ -156,9 +166,7 @@ class GameScene extends Phaser.Scene {
   
       button.on('pointerdown', () => {
         if (button.text == this.questionCorrectAnswer) {
-          alert('Õige vastus');
-          this.activeWheel = this.wheelGood;
-          this.currentCountry.visited = true;
+          this.handleCorrectAnswer();
         }
         else {
           alert('Vale vastus');
@@ -235,6 +243,11 @@ class GameScene extends Phaser.Scene {
       this.buttonRules.visible = false;
       
       this.setCountryInteractivity(true);
+
+      setInterval(() => {
+        this.score.time += 1;
+        this.scoreTime.setText('Aeg: ' + this.score.time);
+      }, 1000);
     });
 
     // Inventory
@@ -276,6 +289,11 @@ class GameScene extends Phaser.Scene {
       question: this.sound.add('question'),
     };
     this.sounds.question.loop = true;
+
+    // Score
+      this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.score.points, { fill: 'black', font: '32px' });
+      this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.score.time, { fill: 'black', font: '32px' });
+    // Score end
   }
 
   update() {
@@ -511,13 +529,25 @@ class GameScene extends Phaser.Scene {
   }
 
   handleSpecialBonus() {
-    const minValue = Math.min(...[this.inventory.drug, this.inventory.ticket, this.inventory.vaccine]);
+    const minValue = Math.min(this.inventory.drug, this.inventory.ticket, this.inventory.vaccine);
     let minValueArray = [];
     for (let key in this.inventory) {
       if (this.inventory[key] === minValue) minValueArray.push(key);
     }
 
-    if (minValueArray.length === 1) this.inventory[minValueArray[0]] += 1;
-    else this.inventory[this.getRandom(minValueArray)] += 1;
+    this.inventory[this.getRandom(minValueArray)] += 1;
+  }
+
+  handleCorrectAnswer() {
+    alert('Õige vastus');
+    this.activeWheel = this.wheelGood;
+    this.currentCountry.visited = true;
+
+    this.handleCountrySuccess();
+  }
+
+  handleCountrySuccess() {
+    this.score.points += this.level;
+    this.scorePoints.setText('Punktid: '+ this.score.points);
   }
 }
