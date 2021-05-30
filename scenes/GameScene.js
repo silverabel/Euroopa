@@ -60,6 +60,7 @@ class GameScene extends Phaser.Scene {
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
     this.load.svg('logo', 'images/logo.svg');
+    this.load.svg('rules', 'images/rules.svg');
 
     this.load.svg('inventory', 'images/inventory.svg');
     this.load.svg('airplane', 'images/airplane.svg');
@@ -250,7 +251,20 @@ class GameScene extends Phaser.Scene {
     this.logo = this.add.image(240, 80, 'logo');
     this.titlepage = this.add.image(960, 540, 'titlepage');
     this.buttonStart = this.add.image(960, 740, 'buttonStart');
+
     this.buttonRules = this.add.text(960, 830, 'Reeglid', { fill: '#C6CF14', font: '32px', align: 'center' }).setOrigin(0.5);
+    this.buttonRules.setInteractive();
+    this.buttonRules.on('pointerdown', () => {
+      this.rules.visible = true;
+    });
+
+
+    this.rules = this.add.image(960, 540, 'rules');
+    this.rules.setInteractive();
+    this.rules.visible = false;
+    this.rules.on('pointerdown', () => {
+      this.rules.visible = false;
+    });
 
     this.buttonStart.setInteractive();
     this.buttonStart.on('pointerdown', () => {
