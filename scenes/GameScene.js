@@ -130,7 +130,7 @@ class GameScene extends Phaser.Scene {
         this.fetchQuestion();
         this.openModal();
 
-        this.activateVaccine();
+        this.activateVaccineBlink();
       });
       // Country event listeners end
 
@@ -181,7 +181,7 @@ class GameScene extends Phaser.Scene {
           this.activeWheel = this.wheelBad;
         }
 
-        this.deactivateVaccine();
+        this.deactivateVaccineBlink();
 
         this.setModalVisibility(false);
         this.clearQuestion();
@@ -296,7 +296,7 @@ class GameScene extends Phaser.Scene {
     this.vaccineOverlay.setAlpha(0);
     this.vaccineOverlay.on('pointerdown', () => {
       this.buffs.vaccine = true;
-      this.deactivateVaccine();
+      this.deactivateVaccineBlink();
       alert('Vaktsiin aktiveeritud');
       this.inventory.vaccine--;
       this.updateInventory();
@@ -310,8 +310,8 @@ class GameScene extends Phaser.Scene {
     this.airplane.visible = false;
 
     this.sounds = {
-      wheel: this.sound.add('wheel'),
-      hover: this.sound.add('hover'),
+      wheel: this.sound.add('wheel', { volume: 0.1 }),
+      hover: this.sound.add('hover', { volume: 0.1 }),
       question: this.sound.add('question'),
     };
     this.sounds.question.loop = true;
@@ -580,14 +580,14 @@ class GameScene extends Phaser.Scene {
     this.currentCountry.visited = true;
   }
 
-  activateVaccine() {
+  activateVaccineBlink() {
     if (this.inventory.vaccine < 1) return;
 
     this.vaccineOverlay.setInteractive();
     this.vaccineInterval = setInterval(this.blinkVaccine.bind(this), 100);
   }
 
-  deactivateVaccine() {
+  deactivateVaccineBlink() {
     clearInterval(this.vaccineInterval);
     this.vaccineOverlay.setAlpha(0);
     this.vaccineOverlay.disableInteractive();
