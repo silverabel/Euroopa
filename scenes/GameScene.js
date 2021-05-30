@@ -331,9 +331,23 @@ class GameScene extends Phaser.Scene {
     this.sounds.question.loop = true;
 
     // Score
-      this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.score.points, { fill: 'black', font: '32px' });
-      this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.score.time, { fill: 'black', font: '32px' });
+    this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.score.points, { fill: 'black', font: '32px' });
+    this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.score.time, { fill: 'black', font: '32px' });
     // Score end
+
+    // Leaderboard
+    this.leaderboardTitle = this.add.text(960, 350, 'Edetabel', { fill: '#000000', font: '64px' }).setOrigin(0.5);
+
+    this.leaderboardHeaderName = this.add.text(640, 420, 'Nimi', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+    this.leaderboardHeaderScore = this.add.text(960, 420, 'Skoor', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+    this.leaderboardHeaderTime = this.add.text(1280, 420, 'Aeg', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+
+    // this.modal.on('pointerdown', () => {
+    //   this.setLeaderboardVisibility(false);
+    // });
+
+    this.setLeaderboardVisibility(false);
+    // Leaderboard end
   }
 
   update() {
@@ -448,8 +462,8 @@ class GameScene extends Phaser.Scene {
 
   async fetchQuestion() {
     this.modalQuestion.setText('Küsimuse laadimine...');
-    let response = await fetch(`api/api.php?country=${this.currentCountry.texture.key}`);
-    let question = await response.json();
+    const response = await fetch(`api/question.php?country=${this.currentCountry.texture.key}`);
+    const question = await response.json();
 
     if (question.name) {
       this.modalQuestion.setText(question.name);
@@ -481,6 +495,16 @@ class GameScene extends Phaser.Scene {
     this.modalButtonA.visible = visibility;
     this.modalButtonB.visible = visibility;
     this.modalButtonC.visible = visibility;
+  }
+
+  setLeaderboardVisibility(visibility) {
+    this.modal.visible = visibility;
+    this.leaderboardTitle.visible = visibility;
+    this.leaderboardHeaderName.visible = visibility;
+    this.leaderboardHeaderScore.visible = visibility;
+    this.leaderboardHeaderTime.visible = visibility;
+
+    visibility ? this.modal.setInteractive() : this.modal.disableInteractive();
   }
 
   finishWheel() {
@@ -554,8 +578,10 @@ class GameScene extends Phaser.Scene {
     return this.countries.getChildren().filter(country => country !== this.currentCountry);
   }
  
-  gameOver() {
-    alert('Mäng läbi :/(//(/');
+  async gameOver() {
+    const name = prompt('Mäng läbi! Sisesta palun edetabeli jaoks enda nimi');
+    const leaderboard = await this.saveToLeaderboard(name);
+    this.showLeaderboard(leaderboard);
   }
 
   applyLockdown(country) {
@@ -611,5 +637,37 @@ class GameScene extends Phaser.Scene {
     if (this.vaccineOverlay.alpha > 0.5) this.vaccineOverlay.setAlpha(0);
 
     this.vaccineOverlay.alpha += 0.1;
+  }
+
+  async saveToLeaderboard(name) {
+    const body = JSON.stringify({
+      name,
+      score: this.score.points,
+      time: this.score.time,
+    });
+    const response = await fetch('api/leaderboard.php', { 
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body,
+    });
+    return await response.json();
+  }
+
+  showLeaderboard(leaderboard) {
+    console.log(leaderboard);
+    this.setLeaderboardVisibility(true);
+
+    for (let i = 0; i < leaderboard.length; i++) {
+      this.add.text(640, 460 + i * 30, leaderboard[i].name, { fill: '#000000', font: '24px' }).setOrigin(0.5);
+      this.add.text(960, 460 + i * 30, leaderboard[i].score, { fill: '#000000', font: '24px' }).setOrigin(0.5);
+      this.add.text(1280, 460 + i * 30, leaderboard[i].time, { fill: '#000000', font: '24px' }).setOrigin(0.5);
+    }
+
+    // this.add.text(640, 420, 'Nimi', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+    // this.add.text(960, 420, 'Skoor', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+    // this.add.text(1280, 420, 'Aeg', { fill: '#000000', font: '32px' }).setOrigin(0.5);
   }
 }
