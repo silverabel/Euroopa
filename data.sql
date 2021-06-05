@@ -6,6 +6,25 @@ CREATE TABLE `country` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `question` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `country_id` int(11) NOT NULL,
+    `name` varchar(500) NOT NULL,
+    `a` varchar(50) NOT NULL,
+    `b` varchar(50) NOT NULL,
+    `c` varchar(50) NOT NULL,
+    `correct` varchar(1) NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `leaderboard` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(500) NOT NULL,
+    `score` int(11) NOT NULL,
+    `time` int(11) NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 INSERT INTO `country` (`id`, `name`, `x`, `y`) VALUES
     (-1, 'europe', 0, 0),
     (1, 'russia', 1368.6, 447),
@@ -58,17 +77,6 @@ INSERT INTO `country` (`id`, `name`, `x`, `y`) VALUES
     (48, 'andorra', 495, 908),
     (49, 'monaco', 582.1, 883),
     (50, 'vatican', 669, 921);
-
-CREATE TABLE `question` (
-    `id` int(11) NOT NULL AUTO_INCREMENT,
-    `country_id` int(11) NOT NULL,
-    `name` varchar(500) NOT NULL,
-    `a` varchar(50) NOT NULL,
-    `b` varchar(50) NOT NULL,
-    `c` varchar(50) NOT NULL,
-    `correct` varchar(1) NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `question` (`id`, `country_id`, `name`, `a`, `b`, `c`, `correct`) VALUES
     (1, 38, 'Mis valuutat kasutab Albaania?', 'Euro', 'Lekk', 'Kroon', 'B'),
@@ -221,11 +229,3 @@ INSERT INTO `question` (`id`, `country_id`, `name`, `a`, `b`, `c`, `correct`) VA
     (148, -1, 'Mis riigis on vanim järjepidevalt kasutusel olnud riigilipp?', 'Rootsi', 'Kreeka', 'Taani', 'C'),
     (149, -1, 'Kui hommikul öeldakse Sulle L-Ghodwa t-Tajba, mis riigis Sa siis oled?', 'Malta', 'Albaania', 'Iirimaa', 'A'),
     (150, -1, '2014 aastal eksportisid Euroopa Liidu riigid 9,1 miljonit kg midagi Qatari. Mis see oli?', 'kivid', 'puit', 'naturaalne liiv', 'C');
-
-CREATE TABLE `leaderboard` (
-    `id` int(11) NOT NULL AUTO_INCREMENT,
-    `name` varchar(500) NOT NULL,
-    `score` int(11) NOT NULL,
-    `time` int(11) NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;

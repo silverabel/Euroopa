@@ -14,19 +14,6 @@ class GameScene extends Phaser.Scene {
       modalButtonHover: 0x333333,
     };
 
-    this.inventory = {
-      vaccine: 1,
-      drug: 1,
-      ticket: 1,
-    };
-
-    this.score = {
-      points: 0,
-      time: 0,
-    };
-
-    this.level = 1;
-
     this.customCountries = new Map();
     this.customCountries
       .set('norway', ['sweden', 'finland', 'russia', ])
@@ -35,14 +22,25 @@ class GameScene extends Phaser.Scene {
       .set('kazakhstan', ['russia'])
       .set('russia', ['norway', 'finland', 'estonia', 'latvia', 'belarus', 'ukraine', 'georgia', 'azerbaijan', 'kazakhstan', ]);
     
-    this.buffs = {
-      vaccine: false,
-      freepass: false,
+    this.state = {
+      inventory: {
+        vaccine: 1,
+        drug: 1,
+        ticket: 1,
+      },
+      score: {
+        points: 0,
+        time: 0,
+      },
+      level: 1,
+      buffs: {
+        vaccine: false,
+        freepass: false,
+      },
+      wheelSectionNumber: 0,
     };
 
     this.getRandom = Phaser.Utils.Array.GetRandom;
-
-    this.wheelSectionNumber = 0;
   }
 
   preload() {
@@ -108,7 +106,7 @@ class GameScene extends Phaser.Scene {
 
         this.airplane.visible = false;
         if (!this.checkNeighbours(countryObject, this.currentCountry)) {
-          this.inventory.ticket--;
+          this.state.inventory.ticket--;
           this.updateInventory();
         }
 
@@ -117,11 +115,11 @@ class GameScene extends Phaser.Scene {
 
         this.setCountryInteractivity(false);
 
-        if (this.buffs.freePass) {
+        if (this.state.buffs.freePass) {
           alert('vaba pääse, küsimusele ei pea vastama');
           this.activeWheel = this.wheelGood;
           this.activateWheel();
-          this.buffs.freePass = false;
+          this.state.buffs.freePass = false;
 
           this.handleCountrySuccess();
           
@@ -189,13 +187,13 @@ class GameScene extends Phaser.Scene {
 
         this.sounds.question.stop();
 
-        if (this.activeWheel === this.wheelBad && this.buffs.vaccine) {
+        if (this.activeWheel === this.wheelBad && this.state.buffs.vaccine) {
           alert('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
           this.setCountryInteractivity(true);
         }
         else this.activateWheel();
 
-        this.buffs.vaccine = false;
+        this.state.buffs.vaccine = false;
       });
     });
     // Modal buttons event listeners end
@@ -275,8 +273,8 @@ class GameScene extends Phaser.Scene {
       this.setCountryInteractivity(true);
 
       setInterval(() => {
-        this.score.time++;
-        this.scoreTime.setText('Aeg: ' + this.score.time);
+        this.state.score.time++;
+        this.scoreTime.setText('Aeg: ' + this.state.score.time);
       }, 1000);
     });
 
@@ -288,31 +286,31 @@ class GameScene extends Phaser.Scene {
     this.drugCount = this.add.text(
       inventoryImagePosition.x + 50,
       inventoryImagePosition.y - 100, 
-      this.inventory.drug, 
+      this.state.inventory.drug, 
       { fill: 'black', font: '32px', align: 'center' }
     ).setOrigin(0.5);
 
     this.ticketCount = this.add.text(
       inventoryImagePosition.x + 50,
       inventoryImagePosition.y + 40, 
-      this.inventory.ticket, 
+      this.state.inventory.ticket, 
       { fill: 'black', font: '32px', align: 'center' }
     ).setOrigin(0.5);
 
     this.vaccineCount = this.add.text(
       inventoryImagePosition.x + 50,
       inventoryImagePosition.y + 180, 
-      this.inventory.vaccine, 
+      this.state.inventory.vaccine, 
       { fill: 'black', font: '32px', align: 'center' }
     ).setOrigin(0.5);
 
     this.vaccineOverlay = this.add.image(inventoryImagePosition.x - 10, inventoryImagePosition.y + 130, 'inventoryOverlay');
     this.vaccineOverlay.setAlpha(0);
     this.vaccineOverlay.on('pointerdown', () => {
-      this.buffs.vaccine = true;
+      this.state.buffs.vaccine = true;
       this.deactivateVaccineBlink();
       alert('Vaktsiin aktiveeritud');
-      this.inventory.vaccine--;
+      this.state.inventory.vaccine--;
       this.updateInventory();
     });
   
@@ -331,8 +329,8 @@ class GameScene extends Phaser.Scene {
     this.sounds.question.loop = true;
 
     // Score
-    this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.score.points, { fill: 'black', font: '32px' });
-    this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.score.time, { fill: 'black', font: '32px' });
+    this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.state.score.points, { fill: 'black', font: '32px' });
+    this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.state.score.time, { fill: 'black', font: '32px' });
     // Score end
 
     // Leaderboard
@@ -356,8 +354,8 @@ class GameScene extends Phaser.Scene {
         this.activeWheel.angle += this.wheelSpeed;
         this.wheelSpeed -= 0.1;
 
-        if (Math.floor(this.activeWheel.angle / 60) !== this.wheelSectionNumber) this.sounds.wheel.play();
-        this.wheelSectionNumber = Math.floor(this.activeWheel.angle / 60);
+        if (Math.floor(this.activeWheel.angle / 60) !== this.state.wheelSectionNumber) this.sounds.wheel.play();
+        this.state.wheelSectionNumber = Math.floor(this.activeWheel.angle / 60);
       }
       else {
         this.wheelSpinning = false;
@@ -372,25 +370,25 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'haigestusid viirusse';
-              if (this.inventory.drug < 1) return this.gameOver();
-              this.inventory.drug--;
+              if (this.state.inventory.drug < 1) return this.gameOver();
+              this.state.inventory.drug--;
             }
             break;
           case 1:
             if (this.activeWheel === this.wheelGood) {
               message = 'vaktsiin';
-              this.inventory.vaccine++;
+              this.state.inventory.vaccine++;
             }
             else {
               message = 'vaktsiin purunes';
-              if (this.inventory.vaccine > 0) this.inventory.vaccine--;
+              if (this.state.inventory.vaccine > 0) this.state.inventory.vaccine--;
             }
             break;
           case 2:
             message = this.activeWheel == this.wheelGood ? 'vaba pääse' : 'vaba pääse';
             if (this.activeWheel === this.wheelGood) {
               message = 'vaba pääse';
-              this.buffs.freePass = true;
+              this.state.buffs.freePass = true;
             }
             else {
               message = 'vaba pääse';
@@ -399,9 +397,9 @@ class GameScene extends Phaser.Scene {
           case -3:
             if (this.activeWheel === this.wheelGood) {
               message = '3x boonus';
-              this.inventory.drug++;
-              this.inventory.ticket++;
-              this.inventory.vaccine++;
+              this.state.inventory.drug++;
+              this.state.inventory.ticket++;
+              this.state.inventory.vaccine++;
             }
             else {
               message = 'riik läheb lukku';
@@ -411,21 +409,21 @@ class GameScene extends Phaser.Scene {
           case -2:
             if (this.activeWheel === this.wheelGood) {
               message = 'lennupilet';
-              this.inventory.ticket++;
+              this.state.inventory.ticket++;
             }
             else {
               message = 'kaotasid lennupileti';
-              if (this.inventory.ticket > 0) this.inventory.ticket--;
+              if (this.state.inventory.ticket > 0) this.state.inventory.ticket--;
             }
             break;
           case -1:
             if (this.activeWheel === this.wheelGood) {
               message = 'ravim';
-              this.inventory.drug++;
+              this.state.inventory.drug++;
             }
             else {
               message = 'kaotasid ravimi';
-              if (this.inventory.drug > 0) this.inventory.drug--;
+              if (this.state.inventory.drug > 0) this.state.inventory.drug--;
             }
         }
 
@@ -438,7 +436,7 @@ class GameScene extends Phaser.Scene {
 
         this.activeWheel.disableInteractive();
 
-        if (this.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return this.gameOver();
+        if (this.state.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return this.gameOver();
 
         this.setCountryInteractivity(true);
       } 
@@ -456,8 +454,6 @@ class GameScene extends Phaser.Scene {
     this.modalButtonA.setInteractive();
     this.modalButtonB.setInteractive();
     this.modalButtonC.setInteractive();
-
-    
   }
 
   async fetchQuestion() {
@@ -526,7 +522,7 @@ class GameScene extends Phaser.Scene {
 
         if (country !== this.currentCountry &&
             country.lockdownDuration < 1 &&
-            (this.inventory.ticket > 0 || this.checkNeighbours(country, this.currentCountry))
+            (this.state.inventory.ticket > 0 || this.checkNeighbours(country, this.currentCountry))
         ) {
           country.setInteractive();
           interactiveCountryCount++;
@@ -539,9 +535,9 @@ class GameScene extends Phaser.Scene {
   }
 
   updateInventory() {
-    this.drugCount.setText(this.inventory.drug);
-    this.ticketCount.setText(this.inventory.ticket);
-    this.vaccineCount.setText(this.inventory.vaccine);
+    this.drugCount.setText(this.state.inventory.drug);
+    this.ticketCount.setText(this.state.inventory.ticket);
+    this.vaccineCount.setText(this.state.inventory.vaccine);
   }
 
   checkNeighbours(country1, country2) {
@@ -597,13 +593,13 @@ class GameScene extends Phaser.Scene {
   }
 
   handleSpecialBonus() {
-    const minValue = Math.min(this.inventory.drug, this.inventory.ticket, this.inventory.vaccine);
+    const minValue = Math.min(this.state.inventory.drug, this.state.inventory.ticket, this.state.inventory.vaccine);
     let minValueArray = [];
-    for (let key in this.inventory) {
-      if (this.inventory[key] === minValue) minValueArray.push(key);
+    for (let key in this.state.inventory) {
+      if (this.state.inventory[key] === minValue) minValueArray.push(key);
     }
 
-    this.inventory[this.getRandom(minValueArray)]++;
+    this.state.inventory[this.getRandom(minValueArray)]++;
   }
 
   handleCorrectAnswer() {
@@ -614,14 +610,14 @@ class GameScene extends Phaser.Scene {
   }
 
   handleCountrySuccess() {
-    this.score.points += this.level;
-    this.scorePoints.setText('Punktid: '+ this.score.points);
+    this.state.score.points += this.level;
+    this.scorePoints.setText('Punktid: '+ this.state.score.points);
 
     this.currentCountry.visited = true;
   }
 
   activateVaccineBlink() {
-    if (this.inventory.vaccine < 1) return;
+    if (this.state.inventory.vaccine < 1) return;
 
     this.vaccineOverlay.setInteractive();
     this.vaccineInterval = setInterval(this.blinkVaccine.bind(this), 100);
@@ -642,8 +638,8 @@ class GameScene extends Phaser.Scene {
   async saveToLeaderboard(name) {
     const body = JSON.stringify({
       name,
-      score: this.score.points,
-      time: this.score.time,
+      score: this.state.score.points,
+      time: this.state.score.time,
     });
     const response = await fetch('api/leaderboard.php', { 
       method: 'POST',
@@ -665,9 +661,5 @@ class GameScene extends Phaser.Scene {
       this.add.text(960, 460 + i * 30, leaderboard[i].score, { fill: '#000000', font: '24px' }).setOrigin(0.5);
       this.add.text(1280, 460 + i * 30, leaderboard[i].time, { fill: '#000000', font: '24px' }).setOrigin(0.5);
     }
-
-    // this.add.text(640, 420, 'Nimi', { fill: '#000000', font: '32px' }).setOrigin(0.5);
-    // this.add.text(960, 420, 'Skoor', { fill: '#000000', font: '32px' }).setOrigin(0.5);
-    // this.add.text(1280, 420, 'Aeg', { fill: '#000000', font: '32px' }).setOrigin(0.5);
   }
 }
