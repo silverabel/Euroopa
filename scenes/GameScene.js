@@ -68,6 +68,7 @@ class GameScene extends Phaser.Scene {
     this.load.svg('logo', 'images/logo.svg');
     this.load.svg('rules', 'images/rules.svg');
 
+    this.load.svg('buttonMenu', 'images/buttonMenu.svg');
     this.load.svg('inventory', 'images/inventory.svg');
     this.load.svg('airplane', 'images/airplane.svg');
 
@@ -121,7 +122,7 @@ class GameScene extends Phaser.Scene {
         this.currentCountry = countryObject;
         this.setFill(countryObject, 'currentCountry');
 
-        this.setCountryInteractivity(false);
+        this.setCountryAndMenuInteractivity(false);
 
         if (this.state.buffs.freePass) {
           this.showPopup('vaba pääse, küsimusele ei pea vastama');
@@ -250,16 +251,7 @@ class GameScene extends Phaser.Scene {
 
     this.buttonStart.setInteractive();
     this.buttonStart.on('pointerdown', () => {
-      this.titlepage.visible = false;
-      this.buttonStart.visible = false;
-      this.buttonRules.visible = false;
-      
-      this.setCountryInteractivity(true);
-
-      setInterval(() => {
-        this.state.score.time++;
-        this.scoreTime.setText('Aeg: ' + this.state.score.time);
-      }, 1000);
+      this.toggleMenu(false);
     });
 
     // Inventory
@@ -312,13 +304,16 @@ class GameScene extends Phaser.Scene {
     };
     this.sounds.question.loop = true;
 
-    // Score
+    // Menu and score
     this.levelText = this.add.text(30, 440, 'Level: ' + this.state.level, { fill: 'black', font: '32px'});
     this.visitedCountriesCountText = this.add.text(30, 470, 'Külastatud riike: ' + this.state.visitedCountriesCount, { fill: 'black', font: '32px'});
     this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.state.score.points, { fill: 'black', font: '32px' });
     this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.state.score.time, { fill: 'black', font: '32px' });
+
+    this.buttonMenu = this.add.image(134, 400, 'buttonMenu');
+    this.buttonMenu.on('pointerdown', () => this.toggleMenu(true));
     
-    // Score end
+    // Menu and score end
 
     // Leaderboard
     this.leaderboardTitle = this.add.text(960, 350, 'Edetabel', { fill: '#000000', font: '64px' }).setOrigin(0.5);
@@ -547,7 +542,7 @@ class GameScene extends Phaser.Scene {
     this.wheelSpeed = afterSpeed;
   }
 
-  setCountryInteractivity(interactivity) {
+  setCountryAndMenuInteractivity(interactivity) {
     let interactiveCountryCount = 0;
 
     this.countries.children.iterate(country => {
@@ -567,6 +562,9 @@ class GameScene extends Phaser.Scene {
       }
       else country.disableInteractive();
     });
+
+    if (interactivity) this.buttonMenu.setInteractive();
+    else this.buttonMenu.disableInteractive();
 
     if (interactivity && !interactiveCountryCount) return this.gameOver();
   }
@@ -720,7 +718,7 @@ class GameScene extends Phaser.Scene {
 
       if (this.activeWheel === this.wheelBad && this.state.buffs.vaccine) {
         this.showPopup('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
-        this.setCountryInteractivity(true);
+        this.setCountryAndMenuInteractivity(true);
       }
       else this.activateWheel();
 
@@ -740,7 +738,7 @@ class GameScene extends Phaser.Scene {
         return this.gameOver();
       }
 
-      this.setCountryInteractivity(true);
+      this.setCountryAndMenuInteractivity(true);
 
       return;
     }
@@ -751,6 +749,24 @@ class GameScene extends Phaser.Scene {
       this.state.buffs.freePass = false;
       
       return;
+    }
+  }
+
+  toggleMenu(show) {
+    this.titlepage.visible = show;
+    this.buttonStart.visible = show;
+    this.buttonRules.visible = show;
+
+    this.setCountryAndMenuInteractivity(!show);
+
+    if (!show) {
+      this.timerInterval = setInterval(() => {
+        this.state.score.time++;
+        this.scoreTime.setText('Aeg: ' + this.state.score.time);
+      }, 1000);
+    }
+    else {
+      clearInterval(this.timerInterval)
     }
   }
 }
