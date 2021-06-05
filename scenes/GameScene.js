@@ -729,14 +729,6 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    if (this.state.buffs.freePass) {
-      this.activeWheel = this.wheelGood;
-      this.activateWheel();
-      this.state.buffs.freePass = false;
-      
-      return;
-    }
-
     if (this.activeWheel && this.activeWheel.visible === true) {
       this.activeWheel.angle = 0;
       this.activeWheel.visible = false;
@@ -746,6 +738,14 @@ class GameScene extends Phaser.Scene {
 
       this.setCountryInteractivity(true);
 
+      return;
+    }
+
+    if (this.state.buffs.freePass) {
+      this.activeWheel = this.wheelGood;
+      this.activateWheel();
+      this.state.buffs.freePass = false;
+      
       return;
     }
   }
