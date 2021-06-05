@@ -200,6 +200,7 @@ class GameScene extends Phaser.Scene {
 
     this.wheelButton = this.add.image(960, 660, 'buttonSpin');
     this.wheelButton.visible = false;
+    this.wheelButton.setInteractive();
 
     this.wheelButton.on('pointerover', () => {
 
@@ -211,7 +212,6 @@ class GameScene extends Phaser.Scene {
 
     this.wheelButton.on('pointerdown', () => {
       this.wheelButton.visible = false;
-      this.wheelButton.disableInteractive();
 
       this.activeWheel.setInteractive();
 
@@ -256,7 +256,7 @@ class GameScene extends Phaser.Scene {
 
     // Inventory
 
-    const inventoryImagePosition = { x: 100, y: 800 }
+    const inventoryImagePosition = { x: 100, y: 760 }
     this.inventoryImage = this.add.image(inventoryImagePosition.x, inventoryImagePosition.y, 'inventory');
     
     this.drugCount = this.add.text(
@@ -305,12 +305,12 @@ class GameScene extends Phaser.Scene {
     this.sounds.question.loop = true;
 
     // Menu and score
-    this.levelText = this.add.text(30, 440, 'Level: ' + this.state.level, { fill: 'black', font: '32px'});
-    this.visitedCountriesCountText = this.add.text(30, 470, 'Külastatud riike: ' + this.state.visitedCountriesCount, { fill: 'black', font: '32px'});
-    this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.state.score.points, { fill: 'black', font: '32px' });
-    this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.state.score.time, { fill: 'black', font: '32px' });
+    this.levelText = this.add.text(30, 430, 'Level: ' + this.state.level, { fill: 'black', font: '32px'});
+    this.visitedCountriesCountText = this.add.text(30, 460, 'Külastatud riike: ' + this.state.visitedCountriesCount, { fill: 'black', font: '32px'});
+    this.scorePoints = this.add.text(30, 490, 'Punktid: ' + this.state.score.points, { fill: 'black', font: '32px' });
+    this.scoreTime = this.add.text(30, 520, 'Aeg: ' + this.state.score.time, { fill: 'black', font: '32px' });
 
-    this.buttonMenu = this.add.image(134, 400, 'buttonMenu');
+    this.buttonMenu = this.add.image(134, 1000, 'buttonMenu');
     this.buttonMenu.on('pointerdown', () => this.toggleMenu(true));
     
     // Menu and score end
@@ -430,8 +430,6 @@ class GameScene extends Phaser.Scene {
         this.updateInventory();
 
         this.activeWheel.disableInteractive();
-
-        if (this.state.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return this.gameOver();
       } 
     }
   }
@@ -594,11 +592,12 @@ class GameScene extends Phaser.Scene {
     return this.physics.overlap(country1, country2) ? true : false;
   }
 
-  activateWheel() {
-    this.activeWheel.visible = true;
-    this.wheelTriangle.visible = true;
-    this.wheelButton.visible = true;
-    this.wheelButton.setInteractive();
+  setWheelVisibility(visibility) {
+    this.activeWheel.visible = visibility;
+    this.wheelTriangle.visible = visibility;
+    this.wheelButton.visible = visibility;
+
+    this.activeWheel.angle = 0;
   }
 
   lockdownRandomCountry() {
@@ -610,6 +609,7 @@ class GameScene extends Phaser.Scene {
   }
  
   async gameOver() {
+    this.setWheelVisibility(false);
     const name = prompt('Mäng läbi! Sisesta palun edetabeli jaoks enda nimi') || 'Ei taha nime panna';
     const leaderboard = await this.saveToLeaderboard(name);
     this.showLeaderboard(leaderboard);
@@ -720,7 +720,7 @@ class GameScene extends Phaser.Scene {
         this.showPopup('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
         this.setCountryAndMenuInteractivity(true);
       }
-      else this.activateWheel();
+      else this.setWheelVisibility(true);
 
       this.state.buffs.vaccine = false;
 
@@ -728,11 +728,7 @@ class GameScene extends Phaser.Scene {
     }
 
     if (this.activeWheel && this.activeWheel.visible === true) {
-      this.activeWheel.angle = 0;
-      this.activeWheel.visible = false;
-      this.wheelTriangle.visible = false;
-
-      this.activeWheel = null;
+      this.setWheelVisibility(false);
 
       if (this.state.visitedCountriesCount >= 50) {
         return this.gameOver();
@@ -745,7 +741,7 @@ class GameScene extends Phaser.Scene {
 
     if (this.state.buffs.freePass) {
       this.activeWheel = this.wheelGood;
-      this.activateWheel();
+      this.setWheelVisibility(true);
       this.state.buffs.freePass = false;
       
       return;
