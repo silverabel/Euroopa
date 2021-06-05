@@ -58,18 +58,19 @@ class GameScene extends Phaser.Scene {
     };
 
     this.load.svg('modal', 'images/modal.svg');
+    this.load.svg('modalRound', 'images/modalRound.svg');
 
-    this.load.svg('wheelGood', 'images/wheelGood.svg');
-    this.load.svg('wheelBad', 'images/wheelBad.svg');
+    this.load.svg('wheelGood', 'images/wheelGood.svg', { width: 986, height: 986 });
+    this.load.svg('wheelBad', 'images/wheelBad.svg', { width: 986, height: 986 });
     this.load.svg('buttonSpin', 'images/buttonSpin.svg');
 
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
-    this.load.svg('logo', 'images/logo.svg');
+    this.load.svg('logo', 'images/logo.svg', { width: 450, height: 161 });
     this.load.svg('rules', 'images/rules.svg');
 
     this.load.svg('buttonMenu', 'images/buttonMenu.svg');
-    this.load.svg('inventory', 'images/inventory.svg');
+    this.load.svg('inventory', 'images/inventory.svg', { width: 145, height: 402 });
     this.load.svg('airplane', 'images/airplane.svg');
 
     this.load.svg('inventoryOverlay', 'images/inventoryOverlay.svg');
@@ -241,6 +242,12 @@ class GameScene extends Phaser.Scene {
       this.rules.visible = true;
     });
 
+    this.buttonLeaderboard = this.add.text(960, 870, 'Edetabel', { fill: '#C6CF14', font: '32px', align: 'center' }).setOrigin(0.5);
+    this.buttonLeaderboard.setInteractive();
+    this.buttonLeaderboard.on('pointerdown', () => {
+      this.fetchAndShowLeaderboard();
+    });
+
 
     this.rules = this.add.image(960, 540, 'rules');
     this.rules.setInteractive();
@@ -316,15 +323,16 @@ class GameScene extends Phaser.Scene {
     // Menu and score end
 
     // Leaderboard
-    this.leaderboardTitle = this.add.text(960, 350, 'Edetabel', { fill: '#000000', font: '64px' }).setOrigin(0.5);
+    this.leaderboardModal = this.add.image(960, 540, 'modalRound');
+    this.leaderboardTitle = this.add.text(960, 350, 'Edetabel', { fill: '#C6CF14', font: '64px' }).setOrigin(0.5);
 
-    this.leaderboardHeaderName = this.add.text(640, 420, 'Nimi', { fill: '#000000', font: '32px' }).setOrigin(0.5);
-    this.leaderboardHeaderScore = this.add.text(960, 420, 'Skoor', { fill: '#000000', font: '32px' }).setOrigin(0.5);
-    this.leaderboardHeaderTime = this.add.text(1280, 420, 'Aeg', { fill: '#000000', font: '32px' }).setOrigin(0.5);
+    this.leaderboardHeaderName = this.add.text(640, 420, 'Nimi', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
+    this.leaderboardHeaderScore = this.add.text(960, 420, 'Skoor', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
+    this.leaderboardHeaderTime = this.add.text(1280, 420, 'Aeg', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
 
-    // this.modal.on('pointerdown', () => {
-    //   this.setLeaderboardVisibility(false);
-    // });
+    this.leaderboardModal.on('pointerdown', () => {
+      this.setLeaderboardVisibility(false);
+    });
 
     this.setLeaderboardVisibility(false);
     // Leaderboard end
@@ -524,13 +532,15 @@ class GameScene extends Phaser.Scene {
   }
 
   setLeaderboardVisibility(visibility) {
-    this.modal.visible = visibility;
+    if (this.leaderboardElements && !visibility) this.leaderboardElements.forEach(element => element.destroy());
+
+    this.leaderboardModal.visible = visibility;
     this.leaderboardTitle.visible = visibility;
     this.leaderboardHeaderName.visible = visibility;
     this.leaderboardHeaderScore.visible = visibility;
     this.leaderboardHeaderTime.visible = visibility;
 
-    visibility ? this.modal.setInteractive() : this.modal.disableInteractive();
+    visibility ? this.leaderboardModal.setInteractive() : this.leaderboardModal.disableInteractive();
   }
 
   finishWheel() {
@@ -691,14 +701,21 @@ class GameScene extends Phaser.Scene {
     return await response.json();
   }
 
+  async fetchAndShowLeaderboard() {
+    const response = await fetch('api/leaderboard.php');
+    this.showLeaderboard(await response.json());
+  }
+
   showLeaderboard(leaderboard) {
-    console.log(leaderboard);
     this.setLeaderboardVisibility(true);
 
+    this.leaderboardElements = [];
     for (let i = 0; i < leaderboard.length; i++) {
-      this.add.text(640, 460 + i * 30, leaderboard[i].name, { fill: '#000000', font: '24px' }).setOrigin(0.5);
-      this.add.text(960, 460 + i * 30, leaderboard[i].score, { fill: '#000000', font: '24px' }).setOrigin(0.5);
-      this.add.text(1280, 460 + i * 30, leaderboard[i].time, { fill: '#000000', font: '24px' }).setOrigin(0.5);
+      this.leaderboardElements.push(
+        this.add.text(640, 460 + i * 30, leaderboard[i].name, { fill: '#C6CF14', font: '24px' }).setOrigin(0.5),
+        this.add.text(960, 460 + i * 30, leaderboard[i].score, { fill: '#C6CF14', font: '24px' }).setOrigin(0.5),
+        this.add.text(1280, 460 + i * 30, leaderboard[i].time, { fill: '#C6CF14', font: '24px' }).setOrigin(0.5)
+      );
     }
   }
 
@@ -752,6 +769,7 @@ class GameScene extends Phaser.Scene {
     this.titlepage.visible = show;
     this.buttonStart.visible = show;
     this.buttonRules.visible = show;
+    this.buttonLeaderboard.visible = show;
 
     this.setCountryAndMenuInteractivity(!show);
 
