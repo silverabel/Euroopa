@@ -38,6 +38,7 @@ class GameScene extends Phaser.Scene {
         time: 0,
       },
       level: 1,
+      visitedCountriesCount: 0,
       questionTime: this.config.questionMaxTime,
       buffs: {
         vaccine: false,
@@ -142,13 +143,12 @@ class GameScene extends Phaser.Scene {
       if (country.name === 'estonia') {
         this.currentCountry = countryObject;
         this.setFill(countryObject, 'currentCountry');
-        countryObject.visited = true;
       }
       else {
         this.setFill(countryObject, 'country');
-        countryObject.visited = false;
       }
 
+      countryObject.visited = false;
       countryObject.lockdownDuration = 0;
     };
 
@@ -317,8 +317,11 @@ class GameScene extends Phaser.Scene {
     this.sounds.question.loop = true;
 
     // Score
+    this.levelText = this.add.text(30, 440, 'Level: ' + this.state.level, { fill: 'black', font: '32px'});
+    this.visitedCountriesCountText = this.add.text(30, 470, 'Külastatud riike: ' + this.state.visitedCountriesCount, { fill: 'black', font: '32px'});
     this.scorePoints = this.add.text(30, 500, 'Punktid: ' + this.state.score.points, { fill: 'black', font: '32px' });
     this.scoreTime = this.add.text(30, 530, 'Aeg: ' + this.state.score.time, { fill: 'black', font: '32px' });
+    
     // Score end
 
     // Leaderboard
@@ -434,12 +437,16 @@ class GameScene extends Phaser.Scene {
   handleQuestionAnswer(answerIsCorrect) {
     if (answerIsCorrect) {
       alert('Õige vastus');
-      this.activateWheel = this.wheelGood;
+      this.activeWheel = this.wheelGood;
       this.handleCountrySuccess();
     }
-    else {
+    else if (answerIsCorrect === false) {
       alert('Vale vastus');
-      this.activateWheel = this.wheelBad;
+      this.activeWheel = this.wheelBad;
+    }
+    else {
+      alert('Aeg läbi! Pead keerutama halba ratast');
+      this.activeWheel = this.wheelBad;
     }
 
     clearInterval(this.questionTimerInterval);
@@ -506,7 +513,7 @@ class GameScene extends Phaser.Scene {
     this.modalTime.setText('Aeg: ' + this.state.questionTime);
     if (this.state.questionTime <= 0) {
       this.activeWheel = this.wheelBad;
-      this.handleQuestionAnswer(false);
+      this.handleQuestionAnswer(null);
     }
   }
 
@@ -637,10 +644,21 @@ class GameScene extends Phaser.Scene {
   }
 
   handleCountrySuccess() {
-    this.state.score.points += this.state.level;
-    this.scorePoints.setText('Punktid: '+ this.state.score.points);
+    if (!this.currentCountry.visited) {
+      this.state.score.points += this.state.level;
+      this.scorePoints.setText('Punktid: '+ this.state.score.points);
+  
+      this.currentCountry.visited = true;
 
-    this.currentCountry.visited = true;
+      this.state.visitedCountriesCount++;
+      this.visitedCountriesCountText.setText('Külastatud riike: ' + this.state.visitedCountriesCount);
+
+      if (this.state.visitedCountriesCount >= 25) {
+        this.state.level = 2;
+        this.levelText.setText('Level: ' + this.state.level);
+        alert('Level up!');
+      }
+    }
   }
 
   activateVaccineBlink() {
