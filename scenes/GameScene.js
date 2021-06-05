@@ -14,6 +14,11 @@ class GameScene extends Phaser.Scene {
       modalButtonHover: 0x333333,
     };
 
+    this.config = {
+      questionMaxTime: 10,
+    };
+
+    // Custom neighbours
     this.customCountries = new Map();
     this.customCountries
       .set('norway', ['sweden', 'finland', 'russia', ])
@@ -33,6 +38,7 @@ class GameScene extends Phaser.Scene {
         time: 0,
       },
       level: 1,
+      questionTime: this.config.questionMaxTime,
       buffs: {
         vaccine: false,
         freepass: false,
@@ -158,6 +164,9 @@ class GameScene extends Phaser.Scene {
     this.modalButtonC = this.add.text(1280, 700, '', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
     this.setFill(this.modalButtonC, 'modalButton');
 
+    this.modalTime = this.add.text(960, 780, '', { font: '24px', align: 'center' }).setOrigin(0.5);
+    this.modalTime.setTintFill(this.colorConfig.modalButton);
+
     this.setModalVisibility(false);
 
     // Set modal buttons event listeners
@@ -172,28 +181,7 @@ class GameScene extends Phaser.Scene {
       });
   
       button.on('pointerdown', () => {
-        if (button.text == this.questionCorrectAnswer) {
-          this.handleCorrectAnswer();
-        }
-        else {
-          alert('Vale vastus');
-          this.activeWheel = this.wheelBad;
-        }
-
-        this.deactivateVaccineBlink();
-
-        this.setModalVisibility(false);
-        this.clearQuestion();
-
-        this.sounds.question.stop();
-
-        if (this.activeWheel === this.wheelBad && this.state.buffs.vaccine) {
-          alert('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
-          this.setCountryInteractivity(true);
-        }
-        else this.activateWheel();
-
-        this.state.buffs.vaccine = false;
+        this.handleQuestionAnswer(button.text == this.questionCorrectAnswer);
       });
     });
     // Modal buttons event listeners end
@@ -443,6 +431,34 @@ class GameScene extends Phaser.Scene {
     }
   }
 
+  handleQuestionAnswer(answerIsCorrect) {
+    if (answerIsCorrect) {
+      alert('Õige vastus');
+      this.activateWheel = this.wheelGood;
+      this.handleCountrySuccess();
+    }
+    else {
+      alert('Vale vastus');
+      this.activateWheel = this.wheelBad;
+    }
+
+    clearInterval(this.questionTimerInterval);
+    this.deactivateVaccineBlink();
+
+    this.setModalVisibility(false);
+    this.clearQuestion();
+
+    this.sounds.question.stop();
+
+    if (this.activeWheel === this.wheelBad && this.state.buffs.vaccine) {
+      alert('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
+      this.setCountryInteractivity(true);
+    }
+    else this.activateWheel();
+
+    this.state.buffs.vaccine = false;
+  }
+
   setFill(object, colorCode) {
     object.setTintFill(this.colorConfig[colorCode]);
   }
@@ -461,6 +477,8 @@ class GameScene extends Phaser.Scene {
     const response = await fetch(`api/question.php?country=${this.currentCountry.texture.key}`);
     const question = await response.json();
 
+    this.startQuestionTimer();
+
     if (question.name) {
       this.modalQuestion.setText(question.name);
       this.modalButtonA.setText(question.a);
@@ -477,6 +495,21 @@ class GameScene extends Phaser.Scene {
     this.questionCorrectAnswer = 'Õige';
   }
 
+  startQuestionTimer() {
+    this.state.questionTime = Math.floor(this.config.questionMaxTime / this.state.level);
+    this.modalTime.setText('Aeg: ' + this.state.questionTime);
+    this.questionTimerInterval = setInterval(this.handleQuestionTimer.bind(this), 1000);
+  }
+
+  handleQuestionTimer() {
+    this.state.questionTime--;
+    this.modalTime.setText('Aeg: ' + this.state.questionTime);
+    if (this.state.questionTime <= 0) {
+      this.activeWheel = this.wheelBad;
+      this.handleQuestionAnswer(false);
+    }
+  }
+
   clearQuestion() {
     this.modalQuestion.setText('');
     this.modalButtonA.setText('');
@@ -491,6 +524,7 @@ class GameScene extends Phaser.Scene {
     this.modalButtonA.visible = visibility;
     this.modalButtonB.visible = visibility;
     this.modalButtonC.visible = visibility;
+    this.modalTime.visible = visibility;
   }
 
   setLeaderboardVisibility(visibility) {
@@ -575,14 +609,14 @@ class GameScene extends Phaser.Scene {
   }
  
   async gameOver() {
-    const name = prompt('Mäng läbi! Sisesta palun edetabeli jaoks enda nimi');
+    const name = prompt('Mäng läbi! Sisesta palun edetabeli jaoks enda nimi') || 'Ei taha nime panna';
     const leaderboard = await this.saveToLeaderboard(name);
     this.showLeaderboard(leaderboard);
   }
 
   applyLockdown(country) {
     country.lockdownDuration = 4;
-    this.setFill(country, 'countryLockdown');
+    country.setTintFill(this.colorConfig.countryLockdown);
   }
 
   removeLockdown(country) {
@@ -602,15 +636,8 @@ class GameScene extends Phaser.Scene {
     this.state.inventory[this.getRandom(minValueArray)]++;
   }
 
-  handleCorrectAnswer() {
-    alert('Õige vastus');
-    this.activeWheel = this.wheelGood;
-
-    this.handleCountrySuccess();
-  }
-
   handleCountrySuccess() {
-    this.state.score.points += this.level;
+    this.state.score.points += this.state.level;
     this.scorePoints.setText('Punktid: '+ this.state.score.points);
 
     this.currentCountry.visited = true;
