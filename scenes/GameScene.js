@@ -61,7 +61,7 @@ class GameScene extends Phaser.Scene {
 
     this.load.svg('wheelGood', 'images/wheelGood.svg');
     this.load.svg('wheelBad', 'images/wheelBad.svg');
-    this.load.svg('buttonSpin', '/images/buttonSpin.svg');
+    this.load.svg('buttonSpin', 'images/buttonSpin.svg');
 
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
