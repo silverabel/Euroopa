@@ -61,6 +61,7 @@ class GameScene extends Phaser.Scene {
 
     this.load.svg('wheelGood', 'images/wheelGood.svg');
     this.load.svg('wheelBad', 'images/wheelBad.svg');
+    this.load.svg('buttonSpin', '/images/buttonSpin.svg');
 
     this.load.svg('titlepage', 'images/titlepage.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
@@ -123,11 +124,7 @@ class GameScene extends Phaser.Scene {
         this.setCountryInteractivity(false);
 
         if (this.state.buffs.freePass) {
-          alert('vaba pääse, küsimusele ei pea vastama');
-          this.activeWheel = this.wheelGood;
-          this.activateWheel();
-          this.state.buffs.freePass = false;
-
+          this.showPopup('vaba pääse, küsimusele ei pea vastama');
           this.handleCountrySuccess();
           
           return;
@@ -200,8 +197,7 @@ class GameScene extends Phaser.Scene {
     this.wheelTriangle = this.add.triangle(960, 80, 0, 0, 100, 0, 50, 100, 0x000000);
     this.wheelTriangle.visible = false;
 
-    this.wheelButton = this.add.text(960, 700, 'SPIN', { font: '32px', align: 'center', wordWrap: { width: 160 } }).setOrigin(0.5);
-    this.setFill(this.wheelButton, 'modalButton');
+    this.wheelButton = this.add.image(960, 660, 'buttonSpin');
     this.wheelButton.visible = false;
 
     this.wheelButton.on('pointerover', () => {
@@ -297,7 +293,7 @@ class GameScene extends Phaser.Scene {
     this.vaccineOverlay.on('pointerdown', () => {
       this.state.buffs.vaccine = true;
       this.deactivateVaccineBlink();
-      alert('Vaktsiin aktiveeritud');
+      this.showPopup('Vaktsiin aktiveeritud');
       this.state.inventory.vaccine--;
       this.updateInventory();
     });
@@ -337,6 +333,23 @@ class GameScene extends Phaser.Scene {
 
     this.setLeaderboardVisibility(false);
     // Leaderboard end
+
+    // Popup
+    this.popup = this.add.rectangle(960, 540, 600, 300, 0xFFFFFF);
+    this.popup.setStrokeStyle(4, 'black');
+    this.popup.message = this.add.text(960, 540, 'Message', { fill: 'black', font: '32px', align: 'center', wordWrap: { width: 500 } }).setOrigin(0.5);
+    this.popup.visible = false;
+    this.popup.message.visible = false;
+    
+    this.popup.setInteractive();
+    this.popup.on('pointerdown', () => {
+      this.popup.visible = false;
+      this.popup.message.visible = false;
+      this.popup.message.setText('');
+
+      this.hidePreviousAndShowNext();
+    });
+    // Popup end
   }
 
   update() {
@@ -418,52 +431,35 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        alert('Tulemus: ' + message);
+        this.showPopup('Tulemus: ' + message);
         this.updateInventory();
-
-        this.activeWheel.angle = 0;
-        this.activeWheel.visible = false;
-        this.wheelTriangle.visible = false;
 
         this.activeWheel.disableInteractive();
 
         if (this.state.inventory.ticket < 1 && this.currentCountry.texture.key === 'iceland') return this.gameOver();
-
-        this.setCountryInteractivity(true);
       } 
     }
   }
 
   handleQuestionAnswer(answerIsCorrect) {
     if (answerIsCorrect) {
-      alert('Õige vastus');
+      this.showPopup('Õige vastus');
       this.activeWheel = this.wheelGood;
       this.handleCountrySuccess();
     }
     else if (answerIsCorrect === false) {
-      alert('Vale vastus');
+      this.showPopup('Vale vastus');
       this.activeWheel = this.wheelBad;
     }
     else {
-      alert('Aeg läbi! Pead keerutama halba ratast');
+      this.showPopup('Aeg läbi! Pead keerutama halba ratast');
       this.activeWheel = this.wheelBad;
     }
 
     clearInterval(this.questionTimerInterval);
     this.deactivateVaccineBlink();
 
-    this.setModalVisibility(false);
-    this.clearQuestion();
-
     this.sounds.question.stop();
-
-    if (this.activeWheel === this.wheelBad && this.state.buffs.vaccine) {
-      alert('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
-      this.setCountryInteractivity(true);
-    }
-    else this.activateWheel();
-
-    this.state.buffs.vaccine = false;
   }
 
   setFill(object, colorCode) {
@@ -653,10 +649,10 @@ class GameScene extends Phaser.Scene {
       this.state.visitedCountriesCount++;
       this.visitedCountriesCountText.setText('Külastatud riike: ' + this.state.visitedCountriesCount);
 
-      if (this.state.visitedCountriesCount >= 25) {
+      if (this.state.visitedCountriesCount >= 25 && this.state.level === 1) {
         this.state.level = 2;
         this.levelText.setText('Level: ' + this.state.level);
-        alert('Level up!');
+        this.showPopup('Level up!');
       }
     }
   }
@@ -705,6 +701,52 @@ class GameScene extends Phaser.Scene {
       this.add.text(640, 460 + i * 30, leaderboard[i].name, { fill: '#000000', font: '24px' }).setOrigin(0.5);
       this.add.text(960, 460 + i * 30, leaderboard[i].score, { fill: '#000000', font: '24px' }).setOrigin(0.5);
       this.add.text(1280, 460 + i * 30, leaderboard[i].time, { fill: '#000000', font: '24px' }).setOrigin(0.5);
+    }
+  }
+
+  showPopup(message) {
+    this.popup.message.setText(message);
+    this.popup.visible = true;
+    this.popup.message.visible = true;
+  }
+
+  hidePreviousAndShowNext() {
+    // Vaccine activated
+    if (!this.activeWheel && this.state.buffs.vaccine) return;
+
+    if (this.modalTitle.visible === true) {
+      this.setModalVisibility(false);
+      this.clearQuestion();
+
+      if (this.activeWheel === this.wheelBad && this.state.buffs.vaccine) {
+        this.showPopup('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
+        this.setCountryInteractivity(true);
+      }
+      else this.activateWheel();
+
+      this.state.buffs.vaccine = false;
+
+      return;
+    }
+
+    if (this.state.buffs.freePass) {
+      this.activeWheel = this.wheelGood;
+      this.activateWheel();
+      this.state.buffs.freePass = false;
+      
+      return;
+    }
+
+    if (this.activeWheel && this.activeWheel.visible === true) {
+      this.activeWheel.angle = 0;
+      this.activeWheel.visible = false;
+      this.wheelTriangle.visible = false;
+
+      this.activeWheel = null;
+
+      this.setCountryInteractivity(true);
+
+      return;
     }
   }
 }
