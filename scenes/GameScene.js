@@ -736,6 +736,10 @@ class GameScene extends Phaser.Scene {
 
       this.activeWheel = null;
 
+      if (this.state.visitedCountriesCount >= 50) {
+        return this.gameOver();
+      }
+
       this.setCountryInteractivity(true);
 
       return;
