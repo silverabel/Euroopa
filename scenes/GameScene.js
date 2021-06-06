@@ -651,7 +651,7 @@ class GameScene extends Phaser.Scene {
 
     if (win) this.gameOverScreen.textWin.visible = true; 
     else {
-      this.sounds.gameLose.play();
+      if (!name) this.sounds.gameLose.play();
       this.gameOverScreen.textLose.visible = true;
     }
 
