@@ -83,6 +83,7 @@ class GameScene extends Phaser.Scene {
     this.load.audio('wheel', 'sounds/wheel.wav');
     this.load.audio('hover', 'sounds/hover.mp3');
     this.load.audio('question', 'sounds/question.wav');
+    this.load.audio('gameLose', 'sounds/gameLose.wav');
   }
  
   create() {
@@ -332,6 +333,7 @@ class GameScene extends Phaser.Scene {
       wheel: this.sound.add('wheel', { volume: 0.1 }),
       hover: this.sound.add('hover', { volume: 0.1 }),
       question: this.sound.add('question'),
+      gameLose: this.sound.add('gameLose', { volume: 0.1 }),
     };
     this.sounds.question.loop = true;
 
@@ -647,7 +649,12 @@ class GameScene extends Phaser.Scene {
     this.setCountryAndMenuInteractivity(false);
     clearInterval(this.timerInterval);
 
-    win ? this.gameOverScreen.textWin.visible = true : this.gameOverScreen.textLose.visible = true;
+    if (win) this.gameOverScreen.textWin.visible = true; 
+    else {
+      this.sounds.gameLose.play();
+      this.gameOverScreen.textLose.visible = true;
+    }
+
     this.gameOverScreen.buttonNewGame.visible = true;
     this.titlepage.visible = true;
     this.buttonLeaderboard.visible = true;
