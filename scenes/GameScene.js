@@ -65,9 +65,14 @@ class GameScene extends Phaser.Scene {
     this.load.svg('buttonSpin', 'images/buttonSpin.svg');
 
     this.load.svg('titlepage', 'images/titlepage.svg');
+    this.load.svg('titlepageText', 'images/titlepageText.svg');
     this.load.svg('buttonStart', 'images/buttonStart.svg');
     this.load.svg('logo', 'images/logo.svg', { width: 450, height: 161 });
     this.load.svg('rules', 'images/rules.svg');
+
+    this.load.svg('gameOverTextWin', 'images/gameOverTextWin.svg');
+    this.load.svg('gameOverTextLose', 'images/gameOverTextLose.svg');
+    this.load.svg('buttonNewGame', 'images/buttonNewGame.svg');
 
     this.load.svg('buttonMenu', 'images/buttonMenu.svg');
     this.load.svg('inventory', 'images/inventory.svg', { width: 145, height: 402 });
@@ -234,6 +239,7 @@ class GameScene extends Phaser.Scene {
     // Logo + Titlepage
     this.logo = this.add.image(240, 80, 'logo');
     this.titlepage = this.add.image(960, 540, 'titlepage');
+    this.titlepageText = this.add.image(960, 610, 'titlepageText');
     this.buttonStart = this.add.image(960, 740, 'buttonStart');
 
     this.buttonRules = this.add.text(960, 830, 'Reeglid', { fill: '#C6CF14', font: '32px', align: 'center' }).setOrigin(0.5);
@@ -260,6 +266,24 @@ class GameScene extends Phaser.Scene {
     this.buttonStart.on('pointerdown', () => {
       this.toggleMenu(false);
     });
+    // Logo + titlepage end
+
+    // Game over page
+    this.gameOverScreen = {
+      textWin: this.add.image(960, 610, 'gameOverTextWin'),
+      textLose: this.add.image(960, 610, 'gameOverTextLose'),
+      buttonNewGame: this.add.image(960, 740, 'buttonNewGame'),
+    };
+    
+    this.gameOverScreen.buttonNewGame.on('pointerdown', () => {
+      location.reload();
+    });
+    this.gameOverScreen.buttonNewGame.setInteractive();
+
+    for (const key in this.gameOverScreen) {
+      this.gameOverScreen[key].visible = false;
+    }
+    // Game over page end
 
     // Inventory
 
@@ -327,7 +351,7 @@ class GameScene extends Phaser.Scene {
     this.leaderboardTitle = this.add.text(960, 350, 'Edetabel', { fill: '#C6CF14', font: '64px' }).setOrigin(0.5);
 
     this.leaderboardHeaderName = this.add.text(640, 420, 'Nimi', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
-    this.leaderboardHeaderScore = this.add.text(960, 420, 'Skoor', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
+    this.leaderboardHeaderScore = this.add.text(960, 420, 'Punktid', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
     this.leaderboardHeaderTime = this.add.text(1280, 420, 'Aeg', { fill: '#C6CF14', font: '32px' }).setOrigin(0.5);
 
     this.leaderboardModal.on('pointerdown', () => {
@@ -377,7 +401,7 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'haigestusid viirusse';
-              if (this.state.inventory.drug < 1) return this.gameOver();
+              if (this.state.inventory.drug < 1) return this.gameOver(false);
               this.state.inventory.drug--;
             }
             break;
@@ -574,7 +598,7 @@ class GameScene extends Phaser.Scene {
     if (interactivity) this.buttonMenu.setInteractive();
     else this.buttonMenu.disableInteractive();
 
-    if (interactivity && !interactiveCountryCount) return this.gameOver();
+    if (interactivity && !interactiveCountryCount) return this.gameOver(false);
   }
 
   updateInventory() {
@@ -618,11 +642,25 @@ class GameScene extends Phaser.Scene {
     return this.countries.getChildren().filter(country => country !== this.currentCountry);
   }
  
-  async gameOver() {
+  gameOver(win, name) {
     this.setWheelVisibility(false);
-    const name = prompt('Mäng läbi! Sisesta palun edetabeli jaoks enda nimi') || 'Ei taha nime panna';
-    const leaderboard = await this.saveToLeaderboard(name);
-    this.showLeaderboard(leaderboard);
+    this.setCountryAndMenuInteractivity(false);
+    clearInterval(this.timerInterval);
+
+    win ? this.gameOverScreen.textWin.visible = true : this.gameOverScreen.textLose.visible = true;
+    this.gameOverScreen.buttonNewGame.visible = true;
+    this.titlepage.visible = true;
+    this.buttonLeaderboard.visible = true;
+
+    if (!name) {
+      setTimeout(() => {
+        this.gameOver(win, prompt('Mäng läbi! Sisesta palun edetabeli jaoks enda nimi') || 'Ei taha nime panna');
+      }, 50);
+
+      return;
+    }
+
+    this.saveToLeaderboard(name);
   }
 
   applyLockdown(country) {
@@ -748,7 +786,7 @@ class GameScene extends Phaser.Scene {
       this.setWheelVisibility(false);
 
       if (this.state.visitedCountriesCount >= 50) {
-        return this.gameOver();
+        return this.gameOver(true);
       }
 
       this.setCountryAndMenuInteractivity(true);
@@ -767,6 +805,7 @@ class GameScene extends Phaser.Scene {
 
   toggleMenu(show) {
     this.titlepage.visible = show;
+    this.titlepageText.visible = show;
     this.buttonStart.visible = show;
     this.buttonRules.visible = show;
     this.buttonLeaderboard.visible = show;
