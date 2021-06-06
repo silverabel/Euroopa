@@ -733,7 +733,7 @@ class GameScene extends Phaser.Scene {
     for (const key in this.state.inventory) extraPoints += this.state.inventory[key];
     this.showPopup(`Said esemete eest ${extraPoints} lisapunkti!`);
     this.state.score.points += extraPoints;
-    this.updateInventory();
+    this.scorePoints.setText('Punktid: '+ this.state.score.points);
 
     const body = JSON.stringify({
       name,
