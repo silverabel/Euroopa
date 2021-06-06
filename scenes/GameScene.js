@@ -730,6 +730,11 @@ class GameScene extends Phaser.Scene {
   }
 
   async saveToLeaderboard(name) {
+    let extraPoints = 0;
+    for (const key in this.state.inventory) extraPoints += this.state.inventory[key];
+    this.showPopup(`Said esemete eest ${extraPoints} lisapunkti!`);
+    this.state.score.points += extraPoints;
+
     const body = JSON.stringify({
       name,
       score: this.state.score.points,
@@ -791,6 +796,7 @@ class GameScene extends Phaser.Scene {
 
     if (this.activeWheel && this.activeWheel.visible === true) {
       this.setWheelVisibility(false);
+      this.activeWheel = null;
 
       if (this.state.visitedCountriesCount >= 50) {
         return this.gameOver(true);
