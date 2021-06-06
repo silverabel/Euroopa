@@ -133,7 +133,6 @@ class GameScene extends Phaser.Scene {
 
         if (this.state.buffs.freePass) {
           this.showPopup('vaba pääse, küsimusele ei pea vastama');
-          this.handleCountrySuccess();
           
           return;
         }
@@ -403,7 +402,10 @@ class GameScene extends Phaser.Scene {
             }
             else {
               message = 'haigestusid viirusse';
-              if (this.state.inventory.drug < 1) return this.gameOver(false);
+              if (this.state.inventory.drug < 1) {
+                this.showPopup('Haigestusid viirusesse, mäng läbi!');
+                return this.gameOver(false);
+              }
               this.state.inventory.drug--;
             }
             break;
@@ -472,7 +474,6 @@ class GameScene extends Phaser.Scene {
     if (answerIsCorrect) {
       this.showPopup('Õige vastus');
       this.activeWheel = this.wheelGood;
-      this.handleCountrySuccess();
     }
     else if (answerIsCorrect === false) {
       this.showPopup('Vale vastus');
@@ -693,20 +694,18 @@ class GameScene extends Phaser.Scene {
   }
 
   handleCountrySuccess() {
-    if (!this.currentCountry.visited) {
-      this.state.score.points += this.state.level;
-      this.scorePoints.setText('Punktid: '+ this.state.score.points);
-  
-      this.currentCountry.visited = true;
+    this.state.score.points += this.state.level;
+    this.scorePoints.setText('Punktid: '+ this.state.score.points);
 
-      this.state.visitedCountriesCount++;
-      this.visitedCountriesCountText.setText('Külastatud riike: ' + this.state.visitedCountriesCount);
+    this.currentCountry.visited = true;
 
-      if (this.state.visitedCountriesCount >= 25 && this.state.level === 1) {
-        this.state.level = 2;
-        this.levelText.setText('Level: ' + this.state.level);
-        this.showPopup('Level up!');
-      }
+    this.state.visitedCountriesCount++;
+    this.visitedCountriesCountText.setText('Külastatud riike: ' + this.state.visitedCountriesCount);
+
+    if (this.state.visitedCountriesCount >= 25 && this.state.level === 1) {
+      this.state.level = 2;
+      this.levelText.setText('Level: ' + this.state.level);
+      this.showPopup('Level up!');
     }
   }
 
@@ -787,7 +786,14 @@ class GameScene extends Phaser.Scene {
         this.showPopup('Vaktsiin aktiivne, halba ratast keerutama ei keerutama');
         this.setCountryAndMenuInteractivity(true);
       }
-      else this.setWheelVisibility(true);
+      else if (this.activeWheel === this.wheelGood && this.currentCountry.visited) {
+        this.showPopup('Riik juba külastatud, head ratast uuesti keerutada ei saa');
+        this.setCountryAndMenuInteractivity(true);
+      }
+      else {
+        if (this.activeWheel === this.wheelGood) this.handleCountrySuccess();
+        this.setWheelVisibility(true);
+      }
 
       this.state.buffs.vaccine = false;
 
@@ -808,9 +814,16 @@ class GameScene extends Phaser.Scene {
     }
 
     if (this.state.buffs.freePass) {
-      this.activeWheel = this.wheelGood;
-      this.setWheelVisibility(true);
-      this.state.buffs.freePass = false;
+      if (this.currentCountry.visited) {
+        this.showPopup('Riik juba külastatud, head ratast uuesti keerutada ei saa');
+        this.setCountryAndMenuInteractivity(true);
+      } 
+      else {
+        this.handleCountrySuccess();
+        this.activeWheel = this.wheelGood;
+        this.setWheelVisibility(true);
+        this.state.buffs.freePass = false;
+      }
       
       return;
     }
